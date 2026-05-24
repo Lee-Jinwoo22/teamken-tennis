@@ -1,0 +1,3328 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TeamKen Tennis League</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Bebas+Neue&display=swap');
+
+  :root {
+    --green: #1a6b3c;
+    --green-light: #2d9e5f;
+    --green-pale: #e8f5ee;
+    --green-mid: #c5e8d4;
+    --accent: #f0a500;
+    --accent-pale: #fff8e6;
+    --bg: #f7f9f7;
+    --surface: #ffffff;
+    --text: #1a2e22;
+    --text-muted: #5a7a65;
+    --border: #d0e8d8;
+    --red: #c0392b;
+    --blue: #2563aa;
+    --blue-pale: #e8f0fb;
+    --shadow: 0 2px 12px rgba(26,107,60,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--green);
+    color: white;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  .header-logo {
+    background: var(--accent);
+    padding: 18px 24px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: var(--green);
+    line-height: 1;
+  }
+
+  .header-title {
+    padding: 18px 24px;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    opacity: 0.9;
+  }
+
+  nav {
+    display: flex;
+    gap: 0;
+  }
+
+  nav button {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    padding: 18px 20px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  nav button:hover { color: white; }
+  nav button.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .page { display: none; padding: 28px 24px; max-width: 900px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--green);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  h2::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 20px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+
+  .form-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .form-row input, .form-row select {
+    flex: 1;
+    min-width: 120px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-row input:focus, .form-row select:focus {
+    border-color: var(--green-light);
+  }
+
+  .btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background: var(--green);
+    color: white;
+  }
+  .btn-primary:hover { background: var(--green-light); }
+
+  .btn-accent {
+    background: var(--accent);
+    color: var(--green);
+    font-weight: 700;
+  }
+  .btn-accent:hover { background: #e09400; }
+
+  .btn-danger {
+    background: transparent;
+    color: var(--red);
+    border: 1px solid var(--red);
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  .btn-danger:hover { background: #fff0ee; }
+
+  .btn-sm {
+    padding: 6px 14px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+
+  .member-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .member-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--green-pale);
+    border: 1px solid var(--green-mid);
+    border-radius: 8px;
+    font-size: 13px;
+  }
+
+  .member-info { display: flex; align-items: center; gap: 8px; }
+
+  .gender-badge {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+  }
+  .gender-M { background: var(--blue-pale); color: var(--blue); }
+  .gender-F { background: #fde8f0; color: #c0509a; }
+
+  .level-badge {
+    background: var(--green);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .attendance-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .attendance-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--surface);
+    user-select: none;
+  }
+
+  .attendance-item.checked {
+    background: var(--green-pale);
+    border-color: var(--green-light);
+  }
+
+  .attendance-item input[type=checkbox] {
+    width: 16px; height: 16px;
+    accent-color: var(--green);
+    cursor: pointer;
+  }
+
+  .att-name { font-size: 13px; font-weight: 500; }
+  .att-meta { font-size: 11px; color: var(--text-muted); }
+
+  .settings-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .settings-row label {
+    font-size: 13px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .settings-row input[type=number] {
+    width: 64px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+  }
+
+  .bracket-wrapper {
+    margin-top: 8px;
+  }
+
+  .round-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0 10px;
+  }
+
+  .round-label {
+    background: var(--green);
+    color: white;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .courts-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+  }
+
+  .court-card {
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--surface);
+  }
+
+  .court-header {
+    background: var(--green);
+    color: white;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .court-header .court-gender {
+    font-size: 11px;
+    opacity: 0.8;
+    font-weight: 400;
+  }
+
+  .team {
+    padding: 10px 14px;
+  }
+
+  .team + .team {
+    border-top: 1px dashed var(--border);
+  }
+
+  .team-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+
+  .team-players {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .player-chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .player-chip.male { background: var(--blue-pale); color: var(--blue); }
+  .player-chip.female { background: #fde8f0; color: #c0509a; }
+
+  .chip-level {
+    font-size: 10px;
+    opacity: 0.7;
+  }
+
+  .vs-divider {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    padding: 2px 0;
+    letter-spacing: 2px;
+  }
+
+  .stats-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--green);
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 1px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .history-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+  }
+
+  .history-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .history-date {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--green);
+  }
+
+  .history-badges {
+    display: flex;
+    gap: 6px;
+  }
+
+  .badge {
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .badge-green { background: var(--green-pale); color: var(--green); }
+  .badge-amber { background: var(--accent-pale); color: #8a6000; }
+
+  .history-players {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+  .alert-warn { background: var(--accent-pale); color: #8a6000; border: 1px solid #f5d97a; }
+  .alert-info { background: var(--blue-pale); color: var(--blue); border: 1px solid #b3cef0; }
+  .alert-success { background: var(--green-pale); color: var(--green); border: 1px solid var(--green-mid); }
+
+  .no-data {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 40px 20px;
+    font-size: 14px;
+  }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .action-bar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+
+  .count-badge {
+    background: var(--green);
+    color: white;
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .shuffle-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 8px;
+  }
+
+  /* ===== 코트 예약 ===== */
+  .court-schedule-wrap {
+    overflow-x: auto;
+    margin-top: 8px;
+  }
+
+  .court-table {
+    border-collapse: collapse;
+    min-width: 700px;
+    width: 100%;
+    font-size: 11px;
+  }
+
+  .court-table th, .court-table td {
+    border: 1px solid var(--border);
+    padding: 0;
+    text-align: center;
+    vertical-align: top;
+  }
+
+  .court-table thead th {
+    background: var(--green);
+    color: white;
+    padding: 5px 3px;
+    font-weight: 700;
+    font-size: 11px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    white-space: nowrap;
+  }
+
+  .court-table .time-cell {
+    background: var(--bg);
+    font-weight: 700;
+    font-size: 10px;
+    color: var(--text-muted);
+    padding: 4px 6px;
+    white-space: nowrap;
+    min-width: 60px;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+  }
+
+  .court-table .surface-artificial { background: #e8f5ee; }
+  .court-table .surface-hard { background: #e8f0fb; }
+
+  .court-cell {
+    min-width: 68px;
+    min-height: 38px;
+    padding: 2px;
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+  }
+
+  .court-cell:hover { filter: brightness(0.95); }
+
+  .court-cell.booked {
+    background: var(--green-pale) !important;
+  }
+
+  .court-cell.booked-hard {
+    background: var(--blue-pale) !important;
+  }
+
+  .court-cell-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 32px;
+    justify-content: center;
+  }
+
+  .booker-chip {
+    background: var(--green);
+    color: white;
+    border-radius: 3px;
+    padding: 1px 4px;
+    font-size: 9px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .booker-chip.hard { background: var(--blue); }
+
+  .court-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .court-modal {
+    background: white;
+    border-radius: 14px;
+    padding: 22px;
+    width: 340px;
+    max-width: 95vw;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  }
+
+  .court-modal h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--green);
+    margin-bottom: 14px;
+  }
+
+  .booker-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .booker-row input {
+    flex: 1;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+  }
+
+  .settlement-box {
+    background: var(--green-pale);
+    border: 1px solid var(--green-mid);
+    border-radius: 10px;
+    padding: 14px;
+    margin-top: 20px;
+  }
+
+  .settlement-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--green);
+    margin-bottom: 10px;
+  }
+
+  .settlement-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--green-mid);
+  }
+
+  .settlement-row:last-child { border-bottom: none; }
+
+  .settlement-amount {
+    font-weight: 700;
+    color: var(--green);
+  }
+
+    header { flex-direction: column; align-items: stretch; }
+    nav { overflow-x: auto; }
+    nav button { padding: 12px 14px; font-size: 12px; }
+    .header-logo { font-size: 22px; padding: 14px 18px; }
+    h2 { font-size: 16px; }
+    .courts-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="header-logo">TEAMKEN</div>
+    <div class="header-title">Tennis League</div>
+  </div>
+  <nav>
+    <button class="active" onclick="showPage('members')">회원 관리</button>
+    <button onclick="showPage('bracket')">대진표 생성</button>
+    <button onclick="showPage('history')">경기 기록</button>
+    <button onclick="showPage('ranking')">순위표</button>
+    <button onclick="showPage('court')">코트 예약</button>
+    <button onclick="showPage('suggest')">건의사항</button>
+    <button onclick="showPage('finance')">회비/회계</button>
+    <button onclick="showPage('settings')">설정 / 백업</button>
+  </nav>
+</header>
+
+<!-- ===== 회원 관리 ===== -->
+<div id="page-members" class="page active">
+  <h2>회원 명단</h2>
+  <div class="card">
+    <div class="section-title">새 회원 추가</div>
+    <div class="form-row">
+      <input type="text" id="m-name" placeholder="이름" maxlength="10">
+      <select id="m-gender">
+        <option value="M">남성</option>
+        <option value="F">여성</option>
+      </select>
+      <select id="m-level">
+        <option value="6">코치</option>
+        <option value="5">레벨 5 (상급)</option>
+        <option value="4">레벨 4 (고급)</option>
+        <option value="3">레벨 3 (중급)</option>
+        <option value="2">레벨 2 (초급)</option>
+        <option value="1">레벨 1 (입문)</option>
+      </select>
+      <button class="btn btn-primary" onclick="addMember()">추가</button>
+    </div>
+  </div>
+
+  <div id="member-count" style="font-size:13px; color:var(--text-muted); margin-bottom:8px;"></div>
+  <div id="member-list" class="member-list"></div>
+</div>
+
+<!-- ===== 대진표 생성 ===== -->
+<div id="page-bracket" class="page">
+  <h2>대진표 생성</h2>
+
+  <div class="card">
+    <div class="section-title">참가자 선택</div>
+    <div id="attendance-grid" class="attendance-grid"></div>
+    <div class="action-bar">
+      <button class="btn btn-sm btn-primary" onclick="checkAll(true)">전체 선택</button>
+      <button class="btn btn-sm" style="border:1px solid var(--border);" onclick="checkAll(false)">전체 해제</button>
+      <span id="att-count" class="count-badge">0명 선택</span>
+    </div>
+    <!-- 게스트 추가 -->
+    <div style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--border);">
+      <div class="section-title" style="margin-bottom:8px;">🙋 게스트 추가 (당일만)</div>
+      <div class="form-row">
+        <input type="text" id="guest-name" placeholder="게스트 이름" maxlength="10">
+        <select id="guest-gender">
+          <option value="M">남성</option>
+          <option value="F">여성</option>
+        </select>
+        <select id="guest-level">
+          <option value="6">코치</option>
+          <option value="5">레벨 5</option>
+          <option value="4">레벨 4</option>
+          <option value="3">레벨 3</option>
+          <option value="2">레벨 2</option>
+          <option value="1">레벨 1</option>
+        </select>
+        <button class="btn btn-sm btn-primary" onclick="addGuest()">추가</button>
+      </div>
+      <div id="guest-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">경기 설정</div>
+    <div class="settings-row">
+      <label>코트 수 <input type="number" id="courts" value="2" min="1" max="10"></label>
+      <label>라운드 수 <input type="number" id="rounds" value="3" min="1" max="20"></label>
+      <label>
+        <input type="checkbox" id="gender-mix" style="width:16px;height:16px;accent-color:var(--green);" checked>
+        성별 분리 배정
+      </label>
+    </div>
+    <div class="action-bar">
+      <button class="btn btn-accent" onclick="generateBracket()">🎾 대진표 생성</button>
+      <button class="btn btn-sm" style="border:1px solid var(--border);" onclick="shuffleBracket()">🔀 다시 섞기</button>
+      <button class="btn btn-sm btn-primary" onclick="saveBracket()" id="save-btn" style="display:none;">💾 경기 기록 저장</button>
+    </div>
+    <div class="shuffle-note">* 동일 설정에서 다시 섞기로 여러 대진 옵션을 볼 수 있습니다</div>
+  </div>
+
+  <div id="bracket-result"></div>
+</div>
+
+<!-- ===== 순위표 ===== -->
+<div id="page-ranking" class="page">
+  <h2>순위표</h2>
+  <div id="ranking-content"></div>
+</div>
+
+<!-- ===== 코트 예약 ===== -->
+<div id="page-court" class="page">
+  <h2>코트 예약</h2>
+
+  <div class="card">
+    <div class="section-title">날짜 선택</div>
+    <div class="form-row" style="align-items:center;">
+      <input type="date" id="court-date" style="flex:none;width:170px;">
+      <button class="btn btn-primary" onclick="loadCourtSchedule()">📅 시간표 추가</button>
+      <button class="btn btn-sm" style="border:1px solid var(--border);" onclick="goToday()">오늘</button>
+      <button class="btn btn-sm btn-primary" onclick="renderAllReservationSummary()">📋 전체 예약 요약</button>
+    </div>
+  </div>
+
+  <!-- 월별 정산 -->
+  <div class="card" style="border-color:var(--accent);">
+    <div class="section-title">💰 월별 정산</div>
+    <div class="form-row" style="align-items:center;">
+      <input type="month" id="settle-month" style="flex:none;width:160px;">
+      <button class="btn btn-accent" onclick="renderMonthlySettlement()">정산 보기</button>
+    </div>
+    <div id="monthly-settlement"></div>
+  </div>
+
+  <!-- 전체 예약 요약 -->
+  <div id="all-reservation-summary"></div>
+
+  <!-- 날짜별 시간표 누적 표시 -->
+  <div id="court-schedules-wrap"></div>
+</div>
+
+<!-- ===== 건의사항 ===== -->
+<div id="page-suggest" class="page">
+  <h2>건의사항</h2>
+
+  <div class="card">
+    <div class="section-title">✏️ 건의사항 작성</div>
+    <div class="form-row">
+      <input type="text" id="suggest-name" placeholder="이름 (익명 가능)" maxlength="10" style="flex:none;width:140px;">
+      <input type="text" id="suggest-category" placeholder="카테고리 (예: 대진, 코트, 기타)" maxlength="15">
+    </div>
+    <div style="margin-bottom:10px;">
+      <textarea id="suggest-content" placeholder="건의사항을 자유롭게 작성해주세요" maxlength="500"
+        style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-family:'Noto Sans KR',sans-serif;font-size:13px;resize:vertical;min-height:90px;outline:none;background:var(--bg);color:var(--text);"></textarea>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span id="suggest-charcount" style="font-size:11px;color:var(--text-muted);">0 / 500자</span>
+      <button class="btn btn-primary" onclick="submitSuggestion()">📨 제출</button>
+    </div>
+  </div>
+
+  <div id="suggest-list"></div>
+</div>
+
+<!-- ===== 회비/회계 ===== -->
+<div id="page-finance" class="page">
+  <h2>회비 / 회계</h2>
+
+  <!-- 탭 전환 -->
+  <div style="display:flex;gap:0;margin-bottom:20px;border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+    <button id="ftab-fee" onclick="switchFinanceTab('fee')"
+      style="flex:1;padding:10px;border:none;background:var(--green);color:white;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">
+      💳 회비 납부현황
+    </button>
+    <button id="ftab-ledger" onclick="switchFinanceTab('ledger')"
+      style="flex:1;padding:10px;border:none;background:var(--bg);color:var(--text-muted);font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border-left:1px solid var(--border);">
+      📒 수입/지출
+    </button>
+    <button id="ftab-summary" onclick="switchFinanceTab('summary')"
+      style="flex:1;padding:10px;border:none;background:var(--bg);color:var(--text-muted);font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border-left:1px solid var(--border);">
+      📊 회계 요약
+    </button>
+  </div>
+
+  <!-- 회비 납부현황 -->
+  <div id="finance-fee">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <label style="font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
+            월 회비 <input type="number" id="monthly-fee-amount" value="30000" style="width:90px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;text-align:right;">원
+          </label>
+          <select id="fee-year" onchange="renderFeeTable()" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg);">
+            <option value="2026">2026년</option>
+            <option value="2025">2025년</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-sm" style="border:1px solid var(--border);" onclick="renderFeeTable()">🔄 새로고침</button>
+          <button class="btn btn-sm btn-primary" onclick="addFeeMonth()">+ 월 추가</button>
+          <button class="btn btn-sm btn-primary" onclick="addFeeMember()">+ 회원 추가</button>
+        </div>
+      </div>
+      <div id="fee-summary" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;"></div>
+    </div>
+    <div style="overflow-x:auto;">
+      <div id="fee-table"></div>
+    </div>
+  </div>
+
+  <!-- 회계 요약 -->
+  <div id="finance-summary" style="display:none;">
+    <div id="finance-summary-content"></div>
+  </div>
+
+  <!-- 수입/지출 -->
+  <div id="finance-ledger" style="display:none;">
+    <div class="card">
+      <div class="section-title">새 항목 추가</div>
+      <div class="form-row">
+        <input type="date" id="ledger-date" style="flex:none;width:150px;">
+        <select id="ledger-type" style="flex:none;width:80px;">
+          <option value="수입">수입</option>
+          <option value="지출">지출</option>
+        </select>
+        <select id="ledger-category" style="flex:none;width:110px;">
+          <option value="월회비">월회비</option>
+          <option value="게스트참가비">게스트참가비</option>
+          <option value="코트비">코트비</option>
+          <option value="용품">용품</option>
+          <option value="기타">기타</option>
+        </select>
+        <input type="text" id="ledger-detail" placeholder="상세 내용" style="flex:2;">
+        <input type="number" id="ledger-amount" placeholder="금액" style="flex:1;min-width:100px;">
+        <button class="btn btn-primary btn-sm" onclick="addLedgerEntry()">추가</button>
+      </div>
+    </div>
+
+    <!-- 월별 요약 -->
+    <div id="ledger-monthly-summary" class="card" style="margin-bottom:16px;"></div>
+
+    <!-- 전체 내역 -->
+    <div style="overflow-x:auto;">
+      <div id="ledger-table"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 설정 / 백업 ===== -->
+<div id="page-settings" class="page">
+  <h2>설정 / 백업</h2>
+
+  <!-- 데이터 백업 -->
+  <div class="card">
+    <div class="section-title">📦 데이터 백업 (내보내기)</div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">현재 저장된 회원 명단과 경기 기록 전체를 JSON 파일로 내보냅니다.<br>PC에 보관해두면 언제든 복원할 수 있어요.</p>
+    <div class="action-bar">
+      <button class="btn btn-primary" onclick="exportData()">⬇️ JSON 파일로 내보내기</button>
+    </div>
+    <div id="export-info" style="margin-top:10px;font-size:12px;color:var(--text-muted);"></div>
+  </div>
+
+  <!-- 데이터 복원 -->
+  <div class="card">
+    <div class="section-title">📂 데이터 복원 (가져오기)</div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">이전에 내보낸 JSON 파일을 불러옵니다.<br><span style="color:var(--red);font-weight:500;">⚠️ 현재 데이터에 병합됩니다. 중복 항목은 자동으로 건너뜁니다.</span></p>
+    <div class="action-bar">
+      <label class="btn btn-primary" style="cursor:pointer;">
+        📂 JSON 파일 불러오기
+        <input type="file" accept=".json" onchange="importData(event)" style="display:none;">
+      </label>
+    </div>
+    <div id="import-result" style="margin-top:10px;font-size:13px;"></div>
+  </div>
+
+  <!-- Firebase 마이그레이션 -->
+  <div class="card">
+    <div class="section-title">☁️ Firebase 마이그레이션 (클라우드 전환)</div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">
+      Firebase 프로젝트를 만든 후 아래에 config를 입력하면<br>
+      현재 localStorage 데이터를 Firebase로 옮기고 이후엔 클라우드에 저장됩니다.
+    </p>
+    <div class="form-row" style="flex-direction:column;gap:8px;">
+      <input type="text" id="fb-apiKey" placeholder="apiKey">
+      <input type="text" id="fb-projectId" placeholder="projectId">
+      <input type="text" id="fb-appId" placeholder="appId">
+    </div>
+    <div class="action-bar" style="margin-top:4px;">
+      <button class="btn btn-accent" onclick="testFirebase()">🔗 연결 테스트</button>
+      <button class="btn btn-primary" onclick="migrateToFirebase()" id="migrate-btn" style="display:none;">☁️ Firebase로 데이터 이전</button>
+    </div>
+    <div id="firebase-status" style="margin-top:12px;font-size:13px;"></div>
+  </div>
+
+  <!-- 위험 구역 -->
+  <div class="card" style="border-color:#f5c0c0;">
+    <div class="section-title" style="color:var(--red);">⚠️ 데이터 초기화</div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">모든 데이터를 삭제합니다. 되돌릴 수 없으니 먼저 백업을 권장합니다.</p>
+    <div class="action-bar">
+      <button class="btn btn-danger" onclick="resetMembers()">회원 명단 초기화</button>
+      <button class="btn btn-danger" onclick="resetHistory()">경기 기록 초기화</button>
+      <button class="btn btn-danger" onclick="resetAll()">전체 초기화</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 경기 기록 ===== -->
+<div id="page-history" class="page">
+  <h2>경기 기록</h2>
+
+  <div class="action-bar" style="margin-bottom:16px;">
+    <button class="btn btn-primary" onclick="toggleManualEntry()">✏️ 과거 경기 직접 입력</button>
+  </div>
+
+  <!-- 직접 입력 폼 -->
+  <div id="manual-entry" style="display:none;">
+    <div class="card" style="border-color:var(--green-mid);">
+      <div class="section-title">✏️ 과거 경기 직접 입력</div>
+      <div class="form-row" style="margin-bottom:16px;align-items:center;">
+        <label style="font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:8px;">
+          경기 날짜 <input type="date" id="manual-date" style="flex:none;width:160px;">
+        </label>
+        <label style="font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:8px;">
+          코트 수 <input type="number" id="manual-courts" value="2" min="1" max="10" style="width:60px;">
+        </label>
+        <label style="font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:8px;">
+          라운드 수 <input type="number" id="manual-rounds" value="3" min="1" max="20" style="width:60px;">
+        </label>
+        <button class="btn btn-primary btn-sm" onclick="buildManualForm()">폼 만들기</button>
+      </div>
+      <div class="section-title" style="margin-bottom:8px;">참가자 선택</div>
+      <div id="manual-att-grid" class="attendance-grid" style="margin-bottom:8px;"></div>
+      <!-- 게스트 추가 -->
+      <div style="margin-bottom:16px;padding:10px 12px;background:var(--accent-pale);border:1px dashed #f5d97a;border-radius:8px;">
+        <div style="font-size:12px;font-weight:700;color:#8a6000;margin-bottom:8px;">🙋 게스트 추가 (당일만)</div>
+        <div class="form-row">
+          <input type="text" id="manual-guest-name" placeholder="게스트 이름" maxlength="10">
+          <select id="manual-guest-gender">
+            <option value="M">남성</option>
+            <option value="F">여성</option>
+          </select>
+          <select id="manual-guest-level">
+            <option value="6">코치</option>
+            <option value="5">레벨 5</option>
+            <option value="4">레벨 4</option>
+            <option value="3">레벨 3</option>
+            <option value="2">레벨 2</option>
+            <option value="1">레벨 1</option>
+          </select>
+          <button class="btn btn-sm btn-primary" onclick="addManualGuest()">추가</button>
+        </div>
+        <div id="manual-guest-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
+      </div>
+      <div id="manual-rounds-form"></div>
+      <div class="action-bar" style="margin-top:16px;">
+        <button class="btn btn-accent" onclick="saveManualEntry()">💾 경기 기록 저장</button>
+        <button class="btn btn-sm" style="border:1px solid var(--border);" onclick="toggleManualEntry()">취소</button>
+      </div>
+      <div id="manual-save-result" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <div id="history-stats" class="stats-summary"></div>
+  <div id="history-list"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+// ========== FIREBASE CONFIG ==========
+const firebaseConfig = {
+  apiKey: "AIzaSyB89p40N5KMy6aA8EkmG3IjENBSVrbjb40",
+  authDomain: "teamken-tennis-league.firebaseapp.com",
+  projectId: "teamken-tennis-league",
+  storageBucket: "teamken-tennis-league.firebasestorage.app",
+  messagingSenderId: "870234754536",
+  appId: "1:870234754536:web:9c28ce4b4149399b7ca85d"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ========== DATA ==========
+let members = [];
+let history = [];
+let currentBracket = null;
+
+async function loadData() {
+  try {
+    showToast('데이터 불러오는 중...');
+    const [mSnap, hSnap] = await Promise.all([
+      db.collection('members').get(),
+      db.collection('history').orderBy('date', 'desc').get()
+    ]);
+    members = mSnap.docs.map(d => d.data()).sort((a,b) => a.name.localeCompare(b.name, 'ko'));
+    history = hSnap.docs.map(d => d.data());
+    renderMembers();
+    renderAttendance();
+    showToast('✅ 데이터 로드 완료', 1500);
+  } catch(e) {
+    members = JSON.parse(localStorage.getItem('tkMembers') || '[]');
+    history = JSON.parse(localStorage.getItem('tkHistory') || '[]');
+    renderMembers();
+    renderAttendance();
+    showToast('⚠️ 오프라인 모드', 2000);
+  }
+}
+
+function levelLabel(level) {
+  return level === 6 ? '코치' : `L${level}`;
+}
+
+function levelBadgeStyle(level) {
+  return level === 6
+    ? 'background:var(--accent);color:var(--green);'
+    : 'background:var(--green);color:white;';
+}
+
+async function save() {
+  localStorage.setItem('tkMembers', JSON.stringify(members));
+  try {
+    const batch = db.batch();
+    // 기존 삭제 후 전체 재저장
+    const snap = await db.collection('members').get();
+    snap.docs.forEach(d => batch.delete(d.ref));
+    members.forEach(m => batch.set(db.collection('members').doc(String(m.id)), m));
+    await batch.commit();
+  } catch(e) { console.warn('회원 저장 오류:', e); }
+}
+
+async function saveHistory() {
+  localStorage.setItem('tkHistory', JSON.stringify(history));
+  try {
+    if (history.length === 0) return;
+    const latest = history[0];
+    await db.collection('history').doc(String(latest.id)).set(latest);
+  } catch(e) { console.warn('기록 저장 오류:', e); }
+}
+
+async function saveHistoryUpdate(entry) {
+  localStorage.setItem('tkHistory', JSON.stringify(history));
+  try {
+    await db.collection('history').doc(String(entry.id)).set(entry);
+  } catch(e) { console.warn('기록 업데이트 오류:', e); }
+}
+
+function showToast(msg, duration=2500) {
+  let t = document.getElementById('tk-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'tk-toast';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--green);color:white;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;z-index:9999;transition:opacity 0.3s;box-shadow:0 4px 12px rgba(0,0,0,0.2);';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity = '0'; }, duration);
+}
+
+// ========== MEMBERS ==========
+function addMember() {
+  const name = document.getElementById('m-name').value.trim();
+  const gender = document.getElementById('m-gender').value;
+  const level = parseInt(document.getElementById('m-level').value);
+  if (!name) { alert('이름을 입력하세요'); return; }
+  if (members.find(m => m.name === name)) { alert('이미 있는 이름입니다'); return; }
+  members.push({ id: Date.now(), name, gender, level });
+  members.sort((a,b) => a.name.localeCompare(b.name, 'ko'));
+  save();
+  document.getElementById('m-name').value = '';
+  renderMembers();
+  renderAttendance();
+
+  // 회비 납부현황에도 자동 추가
+  if (feeData && !feeData.find(m => m.name === name)) {
+    const payments = {};
+    feeMonths.forEach(m => payments[m] = null);
+    const newFee = { name, gender, payments };
+    feeData.push(newFee);
+    feeData.sort((a,b) => a.name.localeCompare(b.name, 'ko'));
+    db.collection('feeData').doc(name).set(newFee).catch(console.warn);
+    localStorage.setItem('tkFeeData', JSON.stringify(feeData));
+    showToast(`${name} 회원 + 회비 명단 추가됨`);
+  }
+}
+
+function deleteMember(id) {
+  const member = members.find(m => m.id === id);
+  if (!member) return;
+  if (!confirm(`${member.name} 회원을 삭제할까요?`)) return;
+  members = members.filter(m => m.id !== id);
+  save();
+  renderMembers();
+  renderAttendance();
+  showToast(`${member.name} 삭제됨`);
+}
+
+function renderMembers() {
+  const el = document.getElementById('member-list');
+  const cnt = document.getElementById('member-count');
+  if (!members.length) {
+    el.innerHTML = '<div class="no-data">등록된 회원이 없습니다</div>';
+    cnt.textContent = '';
+    return;
+  }
+  cnt.textContent = `총 ${members.length}명 (남 ${members.filter(m=>m.gender==='M').length}명 / 여 ${members.filter(m=>m.gender==='F').length}명)`;
+  const sorted = [...members].sort((a,b) => a.name.localeCompare(b.name, 'ko'));
+  el.innerHTML = sorted.map(m => `
+    <div class="member-card" id="mcard-${m.id}">
+      <div class="member-info">
+        <div class="gender-badge gender-${m.gender}">${m.gender==='M'?'남':'여'}</div>
+        <span style="font-weight:500;font-size:13px;">${m.name}</span>
+        <span class="level-badge" style="${levelBadgeStyle(m.level)}">${levelLabel(m.level)}</span>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button class="btn btn-sm" style="border:1px solid var(--border);font-size:11px;" onclick="toggleEdit(${m.id})">수정</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteMember(${m.id})">삭제</button>
+      </div>
+    </div>
+    <div id="medit-${m.id}" style="display:none;grid-column:1/-1;background:var(--green-pale);border:1px solid var(--green-mid);border-radius:8px;padding:10px 14px;margin-top:-6px;margin-bottom:4px;">
+      <div style="font-size:12px;color:var(--green);font-weight:700;margin-bottom:8px;">${m.name} 정보 수정</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <input type="text" id="edit-name-${m.id}" value="${m.name}" maxlength="10" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;width:90px;">
+        <select id="edit-gender-${m.id}" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:white;">
+          <option value="M" ${m.gender==='M'?'selected':''}>남성</option>
+          <option value="F" ${m.gender==='F'?'selected':''}>여성</option>
+        </select>
+        <select id="edit-level-${m.id}" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:white;">
+          <option value="6" ${m.level===6?'selected':''}>코치</option>
+          ${[5,4,3,2,1].map(l=>`<option value="${l}" ${m.level===l?'selected':''}>레벨 ${l}</option>`).join('')}
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="updateMember(${m.id})">저장</button>
+        <button class="btn btn-sm" style="border:1px solid var(--border);" onclick="toggleEdit(${m.id})">취소</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleEdit(id) {
+  const el = document.getElementById(`medit-${id}`);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function updateMember(id) {
+  const m = members.find(m => m.id === id);
+  if (!m) return;
+  const newName = document.getElementById(`edit-name-${id}`).value.trim();
+  if (!newName) { alert('이름을 입력해주세요'); return; }
+  if (newName !== m.name && members.find(other => other.name === newName)) {
+    alert('이미 있는 이름입니다'); return;
+  }
+  m.name = newName;
+  m.gender = document.getElementById(`edit-gender-${id}`).value;
+  m.level = parseInt(document.getElementById(`edit-level-${id}`).value);
+  members.sort((a,b) => a.name.localeCompare(b.name, 'ko'));
+  save();
+  renderMembers();
+  renderAttendance();
+}
+
+// ========== ATTENDANCE ==========
+function renderAttendance() {
+  const grid = document.getElementById('attendance-grid');
+  if (!members.length) {
+    grid.innerHTML = '<div class="no-data">먼저 회원을 추가해주세요</div>';
+    return;
+  }
+  const sorted = [...members].sort((a,b) => a.name.localeCompare(b.name, 'ko'));
+  grid.innerHTML = sorted.map(m => `
+    <label class="attendance-item" id="att-${m.id}">
+      <input type="checkbox" data-id="${m.id}" onchange="updateAttCount()" checked>
+      <div class="gender-badge gender-${m.gender}">${m.gender==='M'?'남':'여'}</div>
+      <div>
+        <div class="att-name">${m.name}</div>
+        <div class="att-meta">${levelLabel(m.level)}</div>
+      </div>
+    </label>
+  `).join('');
+  grid.querySelectorAll('label').forEach(l => {
+    const cb = l.querySelector('input');
+    cb.addEventListener('change', () => l.classList.toggle('checked', cb.checked));
+    l.classList.add('checked');
+  });
+  updateAttCount();
+}
+
+function updateAttCount() {
+  const checked = document.querySelectorAll('#attendance-grid input:checked').length;
+  document.getElementById('att-count').textContent = `${checked}명 선택`;
+}
+
+function checkAll(val) {
+  document.querySelectorAll('#attendance-grid input[type=checkbox]').forEach(cb => {
+    cb.checked = val;
+    cb.closest('label').classList.toggle('checked', val);
+  });
+  updateAttCount();
+}
+
+// ========== BRACKET ==========
+function getAttendees() {
+  const ids = [...document.querySelectorAll('#attendance-grid input:checked')].map(cb => parseInt(cb.dataset.id));
+  return [...members.filter(m => ids.includes(m.id)), ...guests];
+}
+
+function shuffleArr(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function matchByLevel(players) {
+  // 레벨 차이 최소화 페어링
+  const sorted = [...players].sort((a,b) => b.level - a.level);
+  const pairs = [];
+  // 팀A: 짝수 인덱스, 팀B: 홀수 인덱스 (레벨 교차)
+  const teamA = [], teamB = [];
+  sorted.forEach((p, i) => {
+    if (i % 2 === 0) teamA.push(p); else teamB.push(p);
+  });
+  return { teamA, teamB };
+}
+
+function generateRound(players, courts, genderSep, playCounts) {
+  const games = [];
+  // 누적 경기수 적은 순으로 정렬 후 랜덤 섞기 (동률 내 랜덤)
+  const sorted = shuffleArr([...players]).sort((a,b)=>(playCounts[a.id]||0)-(playCounts[b.id]||0));
+  const slots = courts * 4;
+  const playing = sorted.slice(0, Math.min(slots, sorted.length));
+  let pool = playing;
+
+  if (genderSep) {
+    let males = shuffleArr(pool.filter(p => p.gender === 'M'));
+    let females = shuffleArr(pool.filter(p => p.gender === 'F'));
+
+    // 여성 4명 이상이면 먼저 여성 코트 배정
+    const femaleCourtCount = Math.floor(females.length / 4);
+    const femaleUsed = femaleCourtCount * 4;
+    for (let i = 0; i < femaleUsed && games.length < courts; i += 4) {
+      const four = females.slice(i, i + 4);
+      const { teamA, teamB } = matchByLevel(four);
+      games.push({ teamA, teamB, genderLabel: '여성' });
+    }
+    // 여성 잉여 (4명 미만 남은 여자)
+    const femaleLeftover = females.slice(femaleUsed);
+
+    // 남성 코트 배정 — 여성 잉여를 남성 잉여와 합쳐 혼합 코트로
+    const maleCourtCount = Math.floor(males.length / 4);
+    const maleUsed = maleCourtCount * 4;
+    for (let i = 0; i < maleUsed && games.length < courts; i += 4) {
+      const four = males.slice(i, i + 4);
+      const { teamA, teamB } = matchByLevel(four);
+      games.push({ teamA, teamB, genderLabel: '남성' });
+    }
+    // 남성 잉여
+    const maleLeftover = males.slice(maleUsed);
+
+    // 잉여 인원 합쳐서 혼합 코트 구성 (코트를 최대한 채움)
+    let leftover = shuffleArr([...maleLeftover, ...femaleLeftover]);
+    const leftoverUsable = Math.floor(leftover.length / 4) * 4;
+    for (let i = 0; i < leftoverUsable && games.length < courts; i += 4) {
+      const four = leftover.slice(i, i + 4);
+      const { teamA, teamB } = matchByLevel(four);
+      games.push({ teamA, teamB, genderLabel: '혼합' });
+    }
+
+  } else {
+    const usable = Math.floor(pool.length / 4) * 4;
+    for (let i = 0; i < usable && games.length < courts; i += 4) {
+      const four = pool.slice(i, i + 4);
+      const { teamA, teamB } = matchByLevel(four);
+      games.push({ teamA, teamB, genderLabel: '' });
+    }
+  }
+
+  // 실제 투입 선수 playCounts 업데이트
+  const actualPlaying = games.flatMap(g=>[...g.teamA,...g.teamB]);
+  actualPlaying.forEach(p=>{ playCounts[p.id]=(playCounts[p.id]||0)+1; });
+  // 휴식자: 전체 참가자 중 이번 라운드 미투입
+  const playingIds = new Set(actualPlaying.map(p=>p.id));
+  const resting = players.filter(p=>!playingIds.has(p.id));
+  return { games, resting };
+}
+
+function generateBracket() {
+  const attendees = getAttendees();
+  if (attendees.length < 4) {
+    document.getElementById('bracket-result').innerHTML = '<div class="alert alert-warn">참가자가 최소 4명 이상 필요합니다</div>';
+    return;
+  }
+  const courts = parseInt(document.getElementById('courts').value) || 2;
+  const rounds = parseInt(document.getElementById('rounds').value) || 3;
+  const genderSep = document.getElementById('gender-mix').checked;
+  const playCounts = {};
+  attendees.forEach(p=>playCounts[p.id]=0);
+  const bracket = [];
+  for (let r = 1; r <= rounds; r++) {
+    const { games, resting } = generateRound(attendees, courts, genderSep, playCounts);
+    bracket.push({ round: r, games, resting });
+  }
+
+  currentBracket = { attendees, bracket, courts, rounds, genderSep, playCounts, date: new Date().toISOString() };
+  renderBracket(currentBracket);
+  document.getElementById('save-btn').style.display = 'inline-block';
+}
+
+function shuffleBracket() {
+  if (!currentBracket) { generateBracket(); return; }
+  const { attendees, courts, rounds, genderSep } = currentBracket;
+  const playCounts = {};
+  attendees.forEach(p=>playCounts[p.id]=0);
+  const bracket = [];
+  for (let r = 1; r <= rounds; r++) {
+    const { games, resting } = generateRound(attendees, courts, genderSep, playCounts);
+    bracket.push({ round: r, games, resting });
+  }
+  currentBracket.bracket = bracket;
+  currentBracket.playCounts = playCounts;
+  renderBracket(currentBracket);
+}
+
+function playerChip(p) {
+  const cls = p.gender === 'M' ? 'male' : 'female';
+  return `<span class="player-chip ${cls}">${p.name} <span class="chip-level">${levelLabel(p.level)}</span></span>`;
+}
+
+function renderBracket(data) {
+  const { attendees, bracket, playCounts } = data;
+  const males = attendees.filter(p=>p.gender==='M').length;
+  const females = attendees.filter(p=>p.gender==='F').length;
+  const counts = attendees.map(p=>playCounts[p.id]||0);
+  const minC = Math.min(...counts), maxC = Math.max(...counts);
+
+  let html = `
+    <div class="alert alert-success">
+      참가 ${attendees.length}명 (남 ${males} / 여 ${females}) · ${bracket.length}라운드
+      &nbsp;·&nbsp; 1인당 <strong>${minC}~${maxC}회</strong> 경기
+    </div>
+    <div class="bracket-wrapper">
+  `;
+
+  bracket.forEach(round => {
+    html += `
+      <div class="round-header">
+        <span class="round-label">${round.round}라운드</span>
+        <span style="font-size:12px;color:var(--text-muted);">${round.games.length}코트 경기</span>
+      </div>
+      <div class="courts-row">
+    `;
+    round.games.forEach((game, ci) => {
+      const ri = round.round - 1;
+      const avgA = (game.teamA.reduce((s,p)=>s+p.level,0)/game.teamA.length).toFixed(1);
+      const avgB = (game.teamB.reduce((s,p)=>s+p.level,0)/game.teamB.length).toFixed(1);
+      const allOptions = attendees.map(p => `<option value="${p.id}">${p.name} (${levelLabel(p.level)})</option>`).join('');
+      const makeSelect = (player, team, pi) =>
+        `<select onchange="swapPlayer(${ri},${ci},'${team}',${pi},this.value)"
+          style="padding:3px 6px;border-radius:8px;border:1px solid var(--border);font-size:12px;background:${team==='A'?'var(--green-pale)':'var(--blue-pale)'};color:var(--text);cursor:pointer;max-width:130px;">
+          ${attendees.map(p=>`<option value="${p.id}" ${p.id===player.id?'selected':''}>${p.name} (${levelLabel(p.level)})</option>`).join('')}
+        </select>`;
+      html += `
+        <div class="court-card">
+          <div class="court-header">
+            <span>${ci+1}코트</span>
+            ${game.genderLabel ? `<span class="court-gender">${game.genderLabel}</span>` : ''}
+          </div>
+          <div class="team">
+            <div class="team-label">팀 A · Avg L${avgA}</div>
+            <div class="team-players" style="gap:4px;">${game.teamA.map((p,pi)=>makeSelect(p,'A',pi)).join('')}</div>
+          </div>
+          <div class="vs-divider">VS</div>
+          <div class="team">
+            <div class="team-label">팀 B · Avg L${avgB}</div>
+            <div class="team-players" style="gap:4px;">${game.teamB.map((p,pi)=>makeSelect(p,'B',pi)).join('')}</div>
+          </div>
+        </div>
+      `;
+    });
+    if (round.resting && round.resting.length > 0) {
+      html += `
+        <div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--accent-pale);border:1px solid #f5d97a;border-radius:8px;font-size:12px;color:#8a6000;flex-wrap:wrap;">
+          <span style="font-weight:700;">🪑 휴식</span>
+          ${round.resting.map(p=>`<span style="background:rgba(240,165,0,0.15);padding:2px 8px;border-radius:10px;">${p.name} <span style="opacity:0.6;">${levelLabel(p.level)}</span></span>`).join('')}
+        </div>
+      `;
+    }
+    html += '</div>';
+  });
+
+  // 경기 횟수 요약
+  html += `
+    <div style="margin-top:20px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;">
+      <div class="section-title" style="margin-bottom:10px;">경기 횟수 요약</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        ${attendees.map(p=>{
+          const cnt = playCounts[p.id]||0;
+          const isMax = cnt===maxC && maxC!==minC;
+          const isMin = cnt===minC && maxC!==minC;
+          return `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:12px;font-size:12px;
+            background:${isMax?'var(--blue-pale)':isMin?'var(--green-pale)':'var(--bg)'};
+            border:1px solid ${isMax?'#b3cef0':isMin?'var(--green-mid)':'var(--border)'};">
+            ${p.name} <strong style="color:${isMax?'var(--blue)':isMin?'var(--green)':'var(--text-muted)'};">${cnt}회</strong>
+          </span>`;
+        }).join('')}
+      </div>
+      ${maxC!==minC
+        ? `<div style="font-size:11px;color:var(--text-muted);margin-top:8px;">🔵 최다 · 🟢 최소 (다시 섞기로 조정 가능)</div>`
+        : `<div style="font-size:11px;color:var(--green);margin-top:8px;">✅ 모든 참가자 경기 횟수 균등</div>`}
+    </div>
+  `;
+
+  html += '</div>';
+  document.getElementById('bracket-result').innerHTML = html;
+}
+
+// ========== SAVE / HISTORY ==========
+function saveBracket() {
+  if (!currentBracket) return;
+  const entry = {
+    id: Date.now(),
+    date: currentBracket.date,
+    attendees: currentBracket.attendees.map(p => p.name),
+    courts: currentBracket.courts,
+    rounds: currentBracket.rounds,
+    bracket: currentBracket.bracket
+  };
+  history.unshift(entry);
+  saveHistory();
+  document.getElementById('save-btn').style.display = 'none';
+  alert('경기 기록이 저장되었습니다!');
+}
+
+function renderHistory() {
+  const statsEl = document.getElementById('history-stats');
+  const listEl = document.getElementById('history-list');
+
+  if (!history.length) {
+    statsEl.innerHTML = '';
+    listEl.innerHTML = '<div class="no-data">저장된 경기 기록이 없습니다<br><small>대진표 생성 후 저장하면 여기에 기록됩니다</small></div>';
+    return;
+  }
+
+  const totalGames = history.reduce((s,h) => s + h.bracket.reduce((ss,r) => ss + r.games.length, 0), 0);
+  const allPlayers = new Set(history.flatMap(h => h.attendees));
+  const totalRounds = history.reduce((s,h) => s + h.rounds, 0);
+
+  statsEl.innerHTML = `
+    <div class="stat-box"><div class="stat-num">${history.length}</div><div class="stat-label">총 경기일</div></div>
+    <div class="stat-box"><div class="stat-num">${allPlayers.size}</div><div class="stat-label">참가 회원 수</div></div>
+    <div class="stat-box"><div class="stat-num">${totalRounds}</div><div class="stat-label">총 라운드</div></div>
+    <div class="stat-box"><div class="stat-num">${totalGames}</div><div class="stat-label">총 경기 수</div></div>
+  `;
+
+  listEl.innerHTML = history.map((h, hi) => {
+    const d = new Date(h.date);
+    const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+    const timeStr = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    const totalGamesInEntry = h.bracket.reduce((s,r)=>s+r.games.length,0);
+    const resultedGames = h.bracket.reduce((s,r)=>s+r.games.filter(g=>g.result).length,0);
+    const allDone = resultedGames === totalGamesInEntry;
+
+    return `
+      <div class="history-item">
+        <div class="history-meta">
+          <span class="history-date">📅 ${dateStr} ${timeStr}</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="history-badges">
+              <span class="badge badge-green">${h.attendees.length}명 참가</span>
+              <span class="badge badge-amber">${h.courts}코트 ${h.rounds}라운드</span>
+              ${h.manual ? `<span class="badge" style="background:var(--blue-pale);color:var(--blue);">직접입력</span>` : ''}
+              <span class="badge" style="background:${allDone?'var(--green-pale)':'#fff3e0'};color:${allDone?'var(--green)':'#e65100'};">
+                결과 ${resultedGames}/${totalGamesInEntry}
+              </span>
+            </div>
+            <button onclick="deleteHistory(${hi})" style="background:none;border:1px solid var(--red);color:var(--red);border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer;">삭제</button>
+          </div>
+        </div>
+        <div class="history-players" style="margin-bottom:8px;">참가자: ${h.attendees.join(', ')}</div>
+        <button class="btn btn-sm" style="border:1px solid var(--border);font-size:11px;" onclick="toggleResultEntry('hresult-${hi}')">
+          ${allDone ? '✅ 결과 수정' : '📝 결과 입력'}
+        </button>
+        <div id="hresult-${hi}" style="display:none;margin-top:12px;">
+          ${h.bracket.map((round, ri) => `
+            <div style="margin-bottom:12px;">
+              <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:6px;">${round.round}라운드</div>
+              ${round.games.map((game, gi) => {
+                const teamANames = game.teamA.map(p=>p.name||p).join(' · ');
+                const teamBNames = game.teamB.map(p=>p.name||p).join(' · ');
+                const cur = game.result || '';
+                return `
+                  <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg);border-radius:8px;margin-bottom:6px;flex-wrap:wrap;">
+                    <span style="font-size:12px;flex:1;min-width:120px;"><strong>팀A</strong> ${teamANames}</span>
+                    <div style="display:flex;gap:4px;">
+                      <button onclick="setResult(${hi},${ri},${gi},'A')" style="padding:4px 10px;border-radius:6px;border:1.5px solid ${cur==='A'?'var(--green)':'var(--border)'};background:${cur==='A'?'var(--green-pale)':'white'};font-size:11px;font-weight:700;cursor:pointer;color:${cur==='A'?'var(--green)':'var(--text-muted)'};">팀A 승</button>
+                      <button onclick="setResult(${hi},${ri},${gi},'D')" style="padding:4px 10px;border-radius:6px;border:1.5px solid ${cur==='D'?'var(--accent)':'var(--border)'};background:${cur==='D'?'var(--accent-pale)':'white'};font-size:11px;font-weight:700;cursor:pointer;color:${cur==='D'?'#8a6000':'var(--text-muted)'};">무승부</button>
+                      <button onclick="setResult(${hi},${ri},${gi},'B')" style="padding:4px 10px;border-radius:6px;border:1.5px solid ${cur==='B'?'var(--blue)':'var(--border)'};background:${cur==='B'?'var(--blue-pale)':'white'};font-size:11px;font-weight:700;cursor:pointer;color:${cur==='B'?'var(--blue)':'var(--text-muted)'};">팀B 승</button>
+                      <button onclick="deleteGame(${hi},${ri},${gi})" style="padding:4px 8px;border-radius:6px;border:1px solid var(--red);background:white;font-size:11px;cursor:pointer;color:var(--red);">삭제</button>
+                    </div>
+                    <span style="font-size:12px;flex:1;min-width:120px;text-align:right;"><strong>팀B</strong> ${teamBNames}</span>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function deleteGame(hi, ri, gi) {
+  if (!confirm('이 경기를 삭제할까요?')) return;
+  history[hi].bracket[ri].games.splice(gi, 1);
+  // 라운드가 빈 경우 라운드도 제거
+  if (history[hi].bracket[ri].games.length === 0) {
+    history[hi].bracket.splice(ri, 1);
+  }
+  await saveHistoryUpdate(history[hi]);
+  renderHistory();
+  renderRanking();
+  showToast('경기 삭제됨');
+}
+
+async function deleteHistory(hi) {
+  const h = history[hi];
+  const d = new Date(h.date);
+  const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+  if (!confirm(`${dateStr} 경기 기록을 삭제할까요?\n삭제하면 순위표에서도 제외됩니다.`)) return;
+  history.splice(hi, 1);
+  localStorage.setItem('tkHistory', JSON.stringify(history));
+  try {
+    await db.collection('history').doc(String(h.id)).delete();
+    showToast('경기 기록 삭제됨');
+  } catch(e) { console.warn('Firebase 삭제 오류:', e); }
+  renderHistory();
+  renderRanking();
+}
+
+// ========== 대진표 선수 교체 ==========
+function swapPlayer(ri, ci, team, pi, newId) {
+  if (!currentBracket) return;
+  const newPlayer = currentBracket.attendees.find(p => p.id == newId);
+  if (!newPlayer) return;
+  if (team === 'A') {
+    currentBracket.bracket[ri].games[ci].teamA[pi] = newPlayer;
+  } else {
+    currentBracket.bracket[ri].games[ci].teamB[pi] = newPlayer;
+  }
+  renderBracket(currentBracket);
+}
+
+// ========== 결과 입력 ==========
+function toggleResultEntry(id) {
+  const el = document.getElementById(id);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function keepResultOpen(id) {
+  // 결과 입력 후에도 패널 유지 (닫지 않음)
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'block';
+}
+
+function setResult(hi, ri, gi, result) {
+  history[hi].bracket[ri].games[gi].result = result;
+  saveHistoryUpdate(history[hi]);
+  const openId = `hresult-${hi}`;
+  renderHistory();
+  // 결과 입력 패널 다시 열기
+  const el = document.getElementById(openId);
+  if (el) el.style.display = 'block';
+  renderRanking();
+  showToast('결과 저장됨');
+}
+
+// ========== 순위표 ==========
+function calcRanking() {
+  const stats = {}; // name -> { win, draw, lose, pts, games }
+  history.forEach(h => {
+    h.bracket.forEach(round => {
+      round.games.forEach(game => {
+        if (!game.result) return;
+        const teamA = game.teamA.map(p => p.name || p);
+        const teamB = game.teamB.map(p => p.name || p);
+        const ensure = (name) => {
+          if (!stats[name]) stats[name] = { win:0, draw:0, lose:0, pts:0, games:0 };
+        };
+        teamA.forEach(ensure); teamB.forEach(ensure);
+        if (game.result === 'A') {
+          teamA.forEach(n => { stats[n].win++; stats[n].pts+=3; stats[n].games++; });
+          teamB.forEach(n => { stats[n].lose++; stats[n].games++; });
+        } else if (game.result === 'B') {
+          teamB.forEach(n => { stats[n].win++; stats[n].pts+=3; stats[n].games++; });
+          teamA.forEach(n => { stats[n].lose++; stats[n].games++; });
+        } else if (game.result === 'D') {
+          teamA.forEach(n => { stats[n].draw++; stats[n].pts+=1; stats[n].games++; });
+          teamB.forEach(n => { stats[n].draw++; stats[n].pts+=1; stats[n].games++; });
+        }
+      });
+    });
+  });
+  return Object.entries(stats)
+    .map(([name, s]) => ({ name, ...s, winRate: s.games ? Math.round(s.win/s.games*100) : 0 }))
+    .sort((a,b) => b.pts - a.pts || b.win - a.win || b.winRate - a.winRate);
+}
+
+function renderRanking() {
+  const el = document.getElementById('ranking-content');
+  if (!el) return;
+  const ranking = calcRanking();
+  if (!ranking.length) {
+    el.innerHTML = '<div class="no-data">경기 결과를 입력하면 순위가 표시됩니다<br><small>경기 기록 탭 → 결과 입력</small></div>';
+    return;
+  }
+
+  const medals = ['🥇','🥈','🥉'];
+
+  // 동점자 처리: 같은 순위 계산
+  const getRank = (i) => {
+    if (i === 0) return medals[0];
+    const prev = ranking[i-1];
+    const cur = ranking[i];
+    // 앞 사람과 승점·승수·승률 모두 같으면 같은 순위
+    let rankNum = i;
+    for (let j = 0; j < i; j++) {
+      if (ranking[j].pts === cur.pts && ranking[j].win === cur.win && ranking[j].winRate === cur.winRate) {
+        rankNum = j;
+        break;
+      }
+    }
+    return medals[rankNum] || (rankNum + 1);
+  };
+
+  el.innerHTML = `
+    <div class="alert alert-info" style="margin-bottom:16px;">
+      승 3점 · 무 1점 · 패 0점 기준 · 동점 시 승수 → 승률 순
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="background:var(--green);color:white;">
+            <th style="padding:10px 14px;text-align:center;font-weight:700;width:40px;">순위</th>
+            <th style="padding:10px 14px;text-align:left;font-weight:700;">이름</th>
+            <th style="padding:10px 14px;text-align:center;font-weight:700;">경기</th>
+            <th style="padding:10px 14px;text-align:center;font-weight:700;">승</th>
+            <th style="padding:10px 14px;text-align:center;font-weight:700;">무</th>
+            <th style="padding:10px 14px;text-align:center;font-weight:700;">패</th>
+            <th style="padding:10px 14px;text-align:center;font-weight:700;">승률</th>
+            <th style="padding:10px 14px;text-align:center;font-weight:700;">승점</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${ranking.map((p, i) => {
+            const rank = getRank(i);
+            const isTop = typeof rank === 'string';
+            const bg = i % 2 === 0 ? 'var(--bg)' : 'var(--surface)';
+            const member = members.find(m => m.name === p.name);
+            const levelBadge = member ? `<span class="level-badge" style="font-size:10px;margin-left:4px;${levelBadgeStyle(member.level)}">${levelLabel(member.level)}</span>` : '';
+            const genderBadge = member ? `<div class="gender-badge gender-${member.gender}" style="width:18px;height:18px;font-size:10px;">${member.gender==='M'?'남':'여'}</div>` : '';
+            return `
+              <tr style="background:${isTop?'var(--green-pale)':bg};border-top:0.5px solid var(--border);">
+                <td style="padding:10px 14px;text-align:center;font-size:${typeof rank==='string'?'16':'13'}px;">${rank}</td>
+                <td style="padding:10px 14px;">
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    ${genderBadge}
+                    <span style="font-weight:${isTop?'700':'400'};">${p.name}</span>
+                    ${levelBadge}
+                  </div>
+                </td>
+                <td style="padding:10px 14px;text-align:center;color:var(--text-muted);">${p.games}</td>
+                <td style="padding:10px 14px;text-align:center;font-weight:700;color:var(--green);">${p.win}</td>
+                <td style="padding:10px 14px;text-align:center;color:#8a6000;">${p.draw}</td>
+                <td style="padding:10px 14px;text-align:center;color:var(--text-muted);">${p.lose}</td>
+                <td style="padding:10px 14px;text-align:center;">${p.winRate}%</td>
+                <td style="padding:10px 14px;text-align:center;font-size:15px;font-weight:700;color:var(--green);">${p.pts}점</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 파트너 궁합 -->
+    <div style="margin-top:24px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;">
+      <div style="font-size:15px;font-weight:700;color:var(--green);margin-bottom:4px;">🎾 베스트 파트너 궁합</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">같은 팀으로 경기해서 가장 많이 이긴 파트너 TOP 3</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+        <select id="partner-select" onchange="renderPartner()" style="padding:8px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg);color:var(--text);outline:none;flex:1;max-width:200px;">
+          <option value="">회원 선택...</option>
+          ${members.map(m=>`<option value="${m.name}">${m.name} (${levelLabel(m.level)})</option>`).join('')}
+        </select>
+      </div>
+      <div id="partner-result"></div>
+    </div>
+  `;}
+
+// ========== 파트너 궁합 ==========
+function calcPartner(targetName) {
+  // partner -> { together(함께 경기), wins(함께 이긴 횟수), draws }
+  const stats = {};
+  history.forEach(h => {
+    h.bracket.forEach(round => {
+      round.games.forEach(game => {
+        if (!game.result) return;
+        const teamA = game.teamA.map(p => p.name || p);
+        const teamB = game.teamB.map(p => p.name || p);
+        const inA = teamA.includes(targetName);
+        const inB = teamB.includes(targetName);
+        if (!inA && !inB) return;
+
+        const teammates = inA ? teamA.filter(n => n !== targetName) : teamB.filter(n => n !== targetName);
+        const myTeamWon = (inA && game.result === 'A') || (inB && game.result === 'B');
+        const draw = game.result === 'D';
+
+        teammates.forEach(name => {
+          if (!stats[name]) stats[name] = { together: 0, wins: 0, draws: 0 };
+          stats[name].together++;
+          if (myTeamWon) stats[name].wins++;
+          if (draw) stats[name].draws++;
+        });
+      });
+    });
+  });
+  return Object.entries(stats)
+    .map(([name, s]) => ({ name, ...s, winRate: s.together ? Math.round(s.wins / s.together * 100) : 0 }))
+    .sort((a, b) => b.wins - a.wins || b.winRate - a.winRate);
+}
+
+function renderPartner() {
+  const target = document.getElementById('partner-select').value;
+  const el = document.getElementById('partner-result');
+  if (!target) { el.innerHTML = ''; return; }
+
+  const partners = calcPartner(target);
+  if (!partners.length) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">아직 결과가 입력된 경기가 없어요</div>';
+    return;
+  }
+
+  const medals = ['🥇','🥈','🥉'];
+  const top = partners.slice(0, 3);
+
+  el.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      ${top.map((p, i) => {
+        const member = members.find(m => m.name === p.name);
+        const lvBadge = member ? `<span class="level-badge" style="font-size:10px;${levelBadgeStyle(member.level)}">${levelLabel(member.level)}</span>` : '';
+        const gBadge = member ? `<div class="gender-badge gender-${member.gender}" style="width:18px;height:18px;font-size:10px;">${member.gender==='M'?'남':'여'}</div>` : '';
+        return `
+          <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:${i===0?'var(--green-pale)':i===1?'var(--accent-pale)':'var(--bg)'};border:1px solid ${i===0?'var(--green-mid)':i===1?'#f5d97a':'var(--border)'};border-radius:10px;">
+            <span style="font-size:22px;">${medals[i]||''}</span>
+            <div style="display:flex;align-items:center;gap:6px;flex:1;">
+              ${gBadge}
+              <span style="font-size:14px;font-weight:700;">${p.name}</span>
+              ${lvBadge}
+            </div>
+            <div style="text-align:right;font-size:12px;color:var(--text-muted);">
+              <div style="font-size:16px;font-weight:700;color:var(--green);">${p.wins}승</div>
+              <div>${p.together}경기 · 승률 ${p.winRate}%</div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+    ${partners.length > 3 ? `<div style="font-size:11px;color:var(--text-muted);margin-top:8px;">외 ${partners.length-3}명과 함께 경기함</div>` : ''}
+  `;
+}
+
+
+// ========== 회비/회계 ==========
+const INIT_FEE_DATA = [{"name": "강봉식", "gender": "남", "payments": {"2026-01": null, "2026-02": "O", "2026-03": "O", "2026-04": "O", "2026-05": "O", "2026-06": null}, "total_paid": 4, "total_unpaid": 0, "total_amount": 120000}, {"name": "김민지", "gender": "여", "payments": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null}, "total_paid": 0, "total_unpaid": 0, "total_amount": 0}, {"name": "김솔아", "gender": "여", "payments": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null}, "total_paid": 0, "total_unpaid": 0, "total_amount": 0}, {"name": "김태완", "gender": "남", "payments": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null}, "total_paid": 0, "total_unpaid": 0, "total_amount": 0}, {"name": "김혜인", "gender": "여", "payments": {"2026-01": "O", "2026-02": "O", "2026-03": "O", "2026-04": "O", "2026-05": "O", "2026-06": null}, "total_paid": 5, "total_unpaid": 0, "total_amount": 150000}, {"name": "김홍규", "gender": "남", "payments": {"2026-01": "O", "2026-02": "O", "2026-03": "O", "2026-04": "O", "2026-05": "O", "2026-06": null}, "total_paid": 5, "total_unpaid": 0, "total_amount": 150000}, {"name": "박승미", "gender": "여", "payments": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": "O", "2026-05": "O", "2026-06": null}, "total_paid": 2, "total_unpaid": 0, "total_amount": 60000}, {"name": "박진석", "gender": "남", "payments": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null}, "total_paid": 0, "total_unpaid": 0, "total_amount": 0}, {"name": "신일적", "gender": "남", "payments": {"2026-01": "O", "2026-02": "O", "2026-03": "O", "2026-04": "O", "2026-05": "O", "2026-06": null}, "total_paid": 5, "total_unpaid": 0, "total_amount": 150000}, {"name": "신현정", "gender": "여", "payments": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": "O", "2026-05": "O", "2026-06": "O"}, "total_paid": 3, "total_unpaid": 0, "total_amount": 90000}, {"name": "오주아", "gender": "여", "payments": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": "O", "2026-06": null}, "total_paid": 1, "total_unpaid": 0, "total_amount": 30000}, {"name": "우성구", "gender": "남", "payments": {"2026-01": "O", "2026-02": "O", "2026-03": "O", "2026-04": "O", "2026-05": "O", "2026-06": null}, "total_paid": 5, "total_unpaid": 0, "total_amount": 150000}, {"name": "유형선", "gender": "남", "payments": {"2026-01": null, "2026-02": "O", "2026-03": "O", "2026-04": "O", "2026-05": "O", "2026-06": null}, "total_paid": 4, "total_unpaid": 0, "total_amount": 120000}, {"name": "이세인", "gender": "남", "payments": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null}, "total_paid": 0, "total_unpaid": 0, "total_amount": 0}, {"name": "이웅희", "gender": "남", "payments": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": "O", "2026-06": null}, "total_paid": 1, "total_unpaid": 0, "total_amount": 30000}, {"name": "이종규", "gender": "남", "payments": {"2026-01": "O", "2026-02": "O", "2026-03": "O", "2026-04": "O", "2026-05": "O", "2026-06": null}, "total_paid": 5, "total_unpaid": 0, "total_amount": 150000}, {"name": "이주영", "gender": "여", "payments": {"2026-01": "O", "2026-02": "O", "2026-03": "O", "2026-04": "O", "2026-05": "O", "2026-06": null}, "total_paid": 5, "total_unpaid": 0, "total_amount": 150000}, {"name": "이진우", "gender": "남", "payments": {"2026-01": "O", "2026-02": "O", "2026-03": "O", "2026-04": null, "2026-05": null, "2026-06": null}, "total_paid": 3, "total_unpaid": 0, "total_amount": 90000}, {"name": "임하라", "gender": "여", "payments": {"2026-01": "O", "2026-02": "O", "2026-03": "O", "2026-04": "O", "2026-05": "O", "2026-06": null}, "total_paid": 5, "total_unpaid": 0, "total_amount": 150000}, {"name": "장경욱", "gender": "남", "payments": {"2026-01": null, "2026-02": "O", "2026-03": "O", "2026-04": "O", "2026-05": "O", "2026-06": null}, "total_paid": 4, "total_unpaid": 0, "total_amount": 120000}, {"name": "장웅", "gender": "남", "payments": {"2026-01": "O", "2026-02": "O", "2026-03": "O", "2026-04": "O", "2026-05": "O", "2026-06": null}, "total_paid": 5, "total_unpaid": 0, "total_amount": 150000}, {"name": "정인태", "gender": "남", "payments": {"2026-01": "O", "2026-02": "O", "2026-03": "O", "2026-04": "O", "2026-05": "O", "2026-06": null}, "total_paid": 5, "total_unpaid": 0, "total_amount": 150000}, {"name": "정재호", "gender": "남", "payments": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null}, "total_paid": 0, "total_unpaid": 0, "total_amount": 0}, {"name": "정찬솔", "gender": "남", "payments": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null}, "total_paid": 0, "total_unpaid": 0, "total_amount": 0}, {"name": "조대근", "gender": "남", "payments": {"2026-01": "O", "2026-02": "O", "2026-03": "O", "2026-04": "O", "2026-05": "O", "2026-06": null}, "total_paid": 5, "total_unpaid": 0, "total_amount": 150000}, {"name": "주형민", "gender": "남", "payments": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": "O", "2026-06": null}, "total_paid": 1, "total_unpaid": 0, "total_amount": 30000}, {"name": "최서영", "gender": "여", "payments": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null}, "total_paid": 0, "total_unpaid": 0, "total_amount": 0}, {"name": "한공서", "gender": "남", "payments": {"2026-01": "O", "2026-02": "O", "2026-03": "O", "2026-04": "O", "2026-05": "O", "2026-06": null}, "total_paid": 5, "total_unpaid": 0, "total_amount": 150000}, {"name": "홍웅표", "gender": "남", "payments": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": "O", "2026-05": "O", "2026-06": null}, "total_paid": 2, "total_unpaid": 0, "total_amount": 60000}, {"name": "권송이", "gender": "여", "payments": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null}, "total_paid": 0, "total_unpaid": 0, "total_amount": 0}, {"name": "권영옥", "gender": "여", "payments": {"2026-01": "O", "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null}, "total_paid": 1, "total_unpaid": 0, "total_amount": 30000}, {"name": "김길상", "gender": "남", "payments": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null}, "total_paid": 0, "total_unpaid": 0, "total_amount": 0}, {"name": "김태원", "gender": "남", "payments": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null}, "total_paid": 0, "total_unpaid": 0, "total_amount": 0}, {"name": "문미승", "gender": "여", "payments": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null}, "total_paid": 0, "total_unpaid": 0, "total_amount": 0}, {"name": "박윤아", "gender": "여", "payments": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null}, "total_paid": 0, "total_unpaid": 0, "total_amount": 0}, {"name": "신예진", "gender": "여", "payments": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null}, "total_paid": 0, "total_unpaid": 0, "total_amount": 0}, {"name": "윤귀영", "gender": "여", "payments": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null}, "total_paid": 0, "total_unpaid": 0, "total_amount": 0}, {"name": "이강미", "gender": "남", "payments": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null}, "total_paid": 0, "total_unpaid": 0, "total_amount": 0}, {"name": "이희석", "gender": "남", "payments": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null}, "total_paid": 0, "total_unpaid": 0, "total_amount": 0}, {"name": "합계", "gender": null, "payments": {"2026-01": 13, "2026-02": 15, "2026-03": 15, "2026-04": 17, "2026-05": 20, "2026-06": 1}, "total_paid": 0, "total_unpaid": 0, "total_amount": 2700000}];
+const INIT_MONTHS = ["2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06"];
+const INIT_LEDGER = [{"date": "2026-01-01", "type": "수입", "category": "기타", "detail": "2025년 이월금액", "amount": 910969, "balance": 910969}, {"date": "2026-01-02", "type": "수입", "category": "월회비", "detail": "1월 회비", "amount": 600000, "balance": 1510969}, {"date": "2026-01-31", "type": "지출", "category": "기타", "detail": "1월 지출(결산)", "amount": 455075, "balance": 1055894}, {"date": "2026-02-01", "type": "수입", "category": "월회비", "detail": "2월 회비", "amount": 510000, "balance": 1565894}, {"date": "2026-02-28", "type": "수입", "category": "기타", "detail": "2월 지출(결산)", "amount": 238133, "balance": 1804027}, {"date": "2026-03-01", "type": "수입", "category": "월회비", "detail": "3월회비", "amount": 450000, "balance": 2254027}, {"date": "2026-03-31", "type": "지출", "category": "기타", "detail": "3월 지출(결산)", "amount": 66952, "balance": 2187075}, {"date": "2026-04-01", "type": "지출", "category": "코트비", "detail": "3월 송산코트 예약비(김홍규)", "amount": 5000, "balance": 2182075}, {"date": "2026-04-01", "type": "지출", "category": "코트비", "detail": "3월 송산코트 예약비(이진우)", "amount": 37500, "balance": 2144575}, {"date": "2026-04-01", "type": "지출", "category": "코트비", "detail": "3월 송산코트 예약비(임하라)", "amount": 27500, "balance": 2117075}, {"date": "2026-04-04", "type": "수입", "category": "게스트 참가비", "detail": "게스트_신예진", "amount": 10000, "balance": 2127075}, {"date": "2026-04-04", "type": "수입", "category": "게스트 참가비", "detail": "게스트_오주아", "amount": 10000, "balance": 2137075}, {"date": "2026-04-11", "type": "지출", "category": "코트비", "detail": "씨사이드 테니스장", "amount": 430000, "balance": 1707075}, {"date": "2026-04-11", "type": "수입", "category": "게스트 참가비", "detail": "김진주,오주아,이웅희,한광수게스트", "amount": 40000, "balance": 1747075}, {"date": "2026-04-12", "type": "수입", "category": "게스트 참가비", "detail": "이민희, 이순주 게스트", "amount": 6000, "balance": 1753075}, {"date": "2026-04-12", "type": "수입", "category": "게스트 참가비", "detail": "박태영 게스트", "amount": 5000, "balance": 1758075}, {"date": "2026-04-17", "type": "수입", "category": "게스트 참가비", "detail": "오주아 이웅희 게스트", "amount": 20000, "balance": 1778075}, {"date": "2026-04-17", "type": "수입", "category": "게스트 참가비", "detail": "진선호 게스트", "amount": 10000, "balance": 1788075}, {"date": "2026-04-17", "type": "수입", "category": "게스트 참가비", "detail": "신경란 게스트", "amount": 10000, "balance": 1798075}, {"date": "2026-04-17", "type": "지출", "category": "식비/뒤풀이", "detail": "음료", "amount": 14700, "balance": 1783375}, {"date": "2026-04-18", "type": "수입", "category": "가입비", "detail": "박승미 김솔아 신현정 홍웅표 가입비", "amount": 400000, "balance": 2183375}, {"date": "2026-04-18", "type": "수입", "category": "월회비", "detail": "4월 회비", "amount": 510000, "balance": 2693375}, {"date": "2026-04-25", "type": "수입", "category": "게스트 참가비", "detail": "한광수 김소영 이민희 최회윤", "amount": 40000, "balance": 2733375}, {"date": "2026-04-26", "type": "수입", "category": "게스트 참가비", "detail": "우덕균", "amount": 3000, "balance": 2736375}, {"date": "2026-04-26", "type": "수입", "category": "기타 수입", "detail": "이자", "amount": 179, "balance": 2736554}, {"date": "2026-04-27", "type": "지출", "category": "식비/뒤풀이", "detail": "4월 25일 간식비", "amount": 60080, "balance": 2676474}, {"date": "2026-04-27", "type": "지출", "category": "코트비", "detail": "4월 코트 예약비(이진우)", "amount": 20000, "balance": 2656474}, {"date": "2026-04-27", "type": "지출", "category": "코트비", "detail": "4월 코트 예약비(임하라)", "amount": 12500, "balance": 2643974}, {"date": "2026-04-30", "type": "수입", "category": "게스트 참가비", "detail": "권혁진 게스트", "amount": 10000, "balance": 2653974}, {"date": "2026-05-01", "type": "수입", "category": "가입비", "detail": "이웅희, 오주아 가입비", "amount": 100000, "balance": 2753974}, {"date": "2026-05-02", "type": "수입", "category": "월회비", "detail": "5월 회비", "amount": 600000, "balance": 3353974}, {"date": "2026-05-02", "type": "수입", "category": "게스트 참가비", "detail": "박성현 게스트", "amount": 10000, "balance": 3363974}, {"date": "2026-05-02", "type": "지출", "category": "코트비", "detail": "씨사이드 코트비", "amount": 430000, "balance": 2933974}, {"date": "2026-05-02", "type": "지출", "category": "식비/뒤풀이", "detail": "음료수", "amount": 16300, "balance": 2917674}, {"date": "2026-05-02", "type": "수입", "category": "게스트 참가비", "detail": "박태영 게스트", "amount": 10000, "balance": 2927674}, {"date": "2026-05-08", "type": "지출", "category": "식비/뒤풀이", "detail": "5월 8일 음료 ", "amount": 26340, "balance": 2901334}, {"date": "2026-05-08", "type": "수입", "category": "가입비", "detail": "주형민", "amount": 100000, "balance": 3001334}, {"date": "2026-05-09", "type": "수입", "category": "게스트 참가비", "detail": "이민희 이순주 최회윤 김소영 자녀", "amount": 50000, "balance": 3051334}, {"date": "2026-05-10", "type": "지출", "category": "공/용품 구입", "detail": "시합구", "amount": 20000, "balance": 3031334}, {"date": "2026-05-10", "type": "지출", "category": "식비/뒤풀이", "detail": "음료", "amount": 4800, "balance": 3026534}, {"date": "2026-05-18", "type": "수입", "category": "게스트 참가비", "detail": "주은총 나승현 게스트", "amount": 20000, "balance": 3046534}, {"date": "2026-05-21", "type": "지출", "category": "기타", "detail": "협회비", "amount": 130000, "balance": 2916534}, {"date": "2026-06-01", "type": "수입", "category": "월회비", "detail": "6월 회비", "amount": 30000, "balance": 2946534}, {"date": "2026-05-24", "type": "지출", "category": "공/용품 구입", "detail": "시합구", "amount": 30000, "balance": 2916534}, {"date": "2026-05-24", "type": "수입", "category": "게스트 참가비", "detail": "게스트 열음 하영 최영근 이광호 이은빈", "amount": 40000, "balance": 2956534}, {"date": "2026-05-24", "type": "수입", "category": "기타 수입", "detail": "이자", "amount": 194, "balance": 2956728}];
+
+let feeData = [];
+let feeMonths = [];
+let ledgerData = [];
+
+async function loadFinanceData() {
+  try {
+    const [fSnap, lSnap, mSnap] = await Promise.all([
+      db.collection('feeData').get(),
+      db.collection('ledgerData').orderBy('date').get(),
+      db.collection('feeMonths').get()
+    ]);
+    if (fSnap.empty) {
+      // 초기 데이터 Firebase에 저장
+      feeData = INIT_FEE_DATA;
+      feeMonths = INIT_MONTHS;
+      const batch = db.batch();
+      feeData.forEach(m => batch.set(db.collection('feeData').doc(m.name), m));
+      feeMonths.forEach((m,i) => batch.set(db.collection('feeMonths').doc(m), {month:m, order:i}));
+      await batch.commit();
+    } else {
+      feeData = fSnap.docs.map(d => d.data()).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+      feeMonths = mSnap.docs.map(d=>d.data()).sort((a,b)=>a.order-b.order).map(d=>d.month);
+    }
+    if (lSnap.empty) {
+      ledgerData = INIT_LEDGER;
+      const batch2 = db.batch();
+      ledgerData.forEach((e,i) => batch2.set(db.collection('ledgerData').doc(String(i+1)), {...e, order:i}));
+      await batch2.commit();
+    } else {
+      ledgerData = lSnap.docs.map(d=>d.data()).sort((a,b)=>{
+        if(a.date!==b.date) return a.date.localeCompare(b.date);
+        return (a.order||0)-(b.order||0);
+      });
+    }
+  } catch(e) {
+    feeData = JSON.parse(localStorage.getItem('tkFeeData') || 'null') || INIT_FEE_DATA;
+    feeMonths = JSON.parse(localStorage.getItem('tkFeeMonths') || 'null') || INIT_MONTHS;
+    ledgerData = JSON.parse(localStorage.getItem('tkLedgerData') || 'null') || INIT_LEDGER;
+  }
+  renderFeeTable();
+  renderLedgerTable();
+}
+
+function switchFinanceTab(tab) {
+  document.getElementById('finance-fee').style.display = tab==='fee'?'block':'none';
+  document.getElementById('finance-ledger').style.display = tab==='ledger'?'block':'none';
+  document.getElementById('finance-summary').style.display = tab==='summary'?'block':'none';
+
+  ['fee','ledger','summary'].forEach(t => {
+    const btn = document.getElementById(`ftab-${t}`);
+    if (!btn) return;
+    btn.style.background = tab===t ? 'var(--green)' : 'var(--bg)';
+    btn.style.color = tab===t ? 'white' : 'var(--text-muted)';
+    btn.style.fontWeight = tab===t ? '700' : '500';
+  });
+
+  if (tab === 'summary') renderFinanceSummary();
+}
+
+// ===== 회비 납부현황 =====
+function renderFeeTable() {
+  const year = document.getElementById('fee-year')?.value || '2026';
+  const monthlyFee = parseInt(document.getElementById('monthly-fee-amount')?.value) || 30000;
+  const yearMonths = feeMonths.filter(m=>m.startsWith(year));
+
+  // 요약
+  let totalPaid = 0, totalUnpaid = 0, totalAmount = 0;
+  feeData.forEach(m => {
+    yearMonths.forEach(mon => {
+      if(m.payments[mon]==='O') { totalPaid++; totalAmount += monthlyFee; }
+      else if(m.payments[mon]==='X') totalUnpaid++;
+    });
+  });
+
+  document.getElementById('fee-summary').innerHTML = `
+    <div class="stat-box"><div class="stat-num">${feeData.length}</div><div class="stat-label">총 회원</div></div>
+    <div class="stat-box"><div class="stat-num">${totalPaid}</div><div class="stat-label">납부 건</div></div>
+    <div class="stat-box"><div class="stat-num">${totalUnpaid}</div><div class="stat-label">미납 건</div></div>
+    <div class="stat-box"><div class="stat-num" style="font-size:18px;">${totalAmount.toLocaleString()}</div><div class="stat-label">납부 총액(원)</div></div>
+  `;
+
+  if(!yearMonths.length) {
+    document.getElementById('fee-table').innerHTML = '<div class="no-data">해당 연도 데이터가 없습니다</div>';
+    return;
+  }
+
+  const monthLabels = yearMonths.map(m=>m.slice(5)+'월');
+
+  let html = `
+    <table style="border-collapse:collapse;font-size:12px;min-width:600px;width:100%;">
+      <thead>
+        <tr style="background:var(--green);color:white;">
+          <th style="padding:8px 12px;text-align:left;position:sticky;left:0;background:var(--green);z-index:1;white-space:nowrap;">이름</th>
+          <th style="padding:8px 6px;white-space:nowrap;">성별</th>
+          ${monthLabels.map((m,i)=>`<th style="padding:8px 6px;white-space:nowrap;">${m}</th>`).join('')}
+          <th style="padding:8px 6px;white-space:nowrap;">납부</th>
+          <th style="padding:8px 6px;white-space:nowrap;">납부금액</th>
+          <th style="padding:8px 6px;white-space:nowrap;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${feeData.map((member,ri)=>{
+          const bg = ri%2===0?'var(--surface)':'var(--bg)';
+          const paidCount = yearMonths.filter(m=>member.payments[m]==='O').length;
+          const amount = paidCount * monthlyFee;
+          const isHiatus = member.hiatus;
+          return `
+            <tr style="background:${bg};border-bottom:1px solid var(--border);opacity:${isHiatus?'0.4':'1'};">
+              <td style="padding:7px 12px;font-weight:500;position:sticky;left:0;background:${bg};z-index:1;">
+                ${member.name}
+                ${isHiatus?`<span style="font-size:9px;color:var(--text-muted);margin-left:4px;background:var(--border);padding:1px 5px;border-radius:6px;">휴회</span>`:''}
+              </td>
+              <td style="padding:7px 6px;text-align:center;color:var(--text-muted);">${member.gender}</td>
+              ${yearMonths.map((m,mi)=>{
+                const val = member.payments[m];
+                const isO = val==='O';
+                const isX = val==='X';
+                return `<td style="padding:4px 6px;text-align:center;">
+                  <button onclick="toggleFeePayment('${member.name}','${m}')"
+                    style="width:28px;height:28px;border-radius:6px;border:none;cursor:pointer;font-weight:700;font-size:12px;
+                      background:${isO?'var(--green)':isX?'#fde8e8':'var(--bg)'};
+                      color:${isO?'white':isX?'var(--red)':'var(--border)'};
+                      border:1px solid ${isO?'var(--green)':isX?'var(--red)':'var(--border)'};
+                    ">${isO?'O':isX?'X':'-'}</button>
+                </td>`;
+              }).join('')}
+              <td style="padding:7px 6px;text-align:center;font-weight:700;color:var(--green);">${paidCount}</td>
+              <td style="padding:7px 6px;text-align:right;font-weight:700;color:var(--green);padding-right:12px;">${amount.toLocaleString()}원</td>
+              <td style="padding:7px 6px;text-align:center;white-space:nowrap;">
+                <button onclick="toggleHiatus('${member.name}')"
+                  style="background:none;border:1px solid ${isHiatus?'var(--green)':'var(--text-muted)'};color:${isHiatus?'var(--green)':'var(--text-muted)'};border-radius:6px;padding:2px 7px;font-size:10px;cursor:pointer;margin-right:3px;">
+                  ${isHiatus?'복귀':'휴회'}
+                </button>
+                <button onclick="deleteFeeMember('${member.name}')"
+                  style="background:none;border:1px solid var(--red);color:var(--red);border-radius:6px;padding:2px 7px;font-size:10px;cursor:pointer;">탈퇴</button>
+              </td>
+            </tr>
+          `;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+  document.getElementById('fee-table').innerHTML = html;
+}
+
+async function toggleHiatus(name) {
+  const member = feeData.find(m => m.name === name);
+  if (!member) return;
+  member.hiatus = !member.hiatus;
+  localStorage.setItem('tkFeeData', JSON.stringify(feeData));
+  try {
+    await db.collection('feeData').doc(name).set(member);
+  } catch(e) { console.warn(e); }
+  renderFeeTable();
+  showToast(`${name} ${member.hiatus ? '휴회 처리됨' : '복귀 처리됨'}`);
+}
+
+async function deleteFeeMember(name) {
+  if (!confirm(`${name} 회원을 회비 명단에서 삭제할까요?\n(기존 납부 기록도 함께 삭제됩니다)`)) return;
+  feeData = feeData.filter(m => m.name !== name);
+  localStorage.setItem('tkFeeData', JSON.stringify(feeData));
+  try {
+    await db.collection('feeData').doc(name).delete();
+  } catch(e) { console.warn(e); }
+  renderFeeTable();
+  showToast(`${name} 회비 명단에서 삭제됨`);
+}
+
+async function toggleFeePayment(name, month) {
+  const member = feeData.find(m=>m.name===name);
+  if(!member) return;
+  const cur = member.payments[month];
+  member.payments[month] = cur==='O' ? 'X' : cur==='X' ? null : 'O';
+  try {
+    await db.collection('feeData').doc(name).set(member);
+  } catch(e) { console.warn(e); }
+  localStorage.setItem('tkFeeData', JSON.stringify(feeData));
+  renderFeeTable();
+}
+
+function addFeeMonth() {
+  const m = prompt('추가할 월을 입력하세요 (예: 2026-07)');
+  if(!m || !/^\d{4}-\d{2}$/.test(m)) { alert('형식이 맞지 않습니다 (예: 2026-07)'); return; }
+  if(feeMonths.includes(m)) { alert('이미 있는 월입니다'); return; }
+  feeMonths.push(m);
+  feeMonths.sort();
+  feeData.forEach(member => { if(!member.payments) member.payments={}; member.payments[m] = null; });
+  db.collection('feeMonths').doc(m).set({month:m, order:feeMonths.indexOf(m)}).catch(console.warn);
+  localStorage.setItem('tkFeeMonths', JSON.stringify(feeMonths));
+  renderFeeTable();
+  showToast(`${m} 추가됐습니다`);
+}
+
+function addFeeMember() {
+  const name = prompt('추가할 회원 이름을 입력하세요');
+  if(!name) return;
+  if(feeData.find(m=>m.name===name)) { alert('이미 있는 회원입니다'); return; }
+  const gender = prompt('성별을 입력하세요 (남/여)') || '남';
+  const payments = {};
+  feeMonths.forEach(m=>payments[m]=null);
+  const newMember = {name, gender, payments};
+  feeData.push(newMember);
+  feeData.sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  db.collection('feeData').doc(name).set(newMember).catch(console.warn);
+  localStorage.setItem('tkFeeData', JSON.stringify(feeData));
+  renderFeeTable();
+  showToast(`${name} 추가됐습니다`);
+}
+
+function renderFinanceSummary() {
+  const el = document.getElementById('finance-summary-content');
+  if (!el || !ledgerData.length) {
+    if (el) el.innerHTML = '<div class="no-data">수입/지출 데이터가 없습니다</div>';
+    return;
+  }
+
+  // 항목별 집계
+  const incomeByCategory = {};
+  const expenseByCategory = {};
+  let totalIncome = 0, totalExpense = 0;
+
+  ledgerData.forEach(e => {
+    const cat = e.category || '기타';
+    if (e.type === '수입') {
+      incomeByCategory[cat] = (incomeByCategory[cat] || 0) + e.amount;
+      totalIncome += e.amount;
+    } else {
+      expenseByCategory[cat] = (expenseByCategory[cat] || 0) + e.amount;
+      totalExpense += e.amount;
+    }
+  });
+
+  const incomeRows = Object.entries(incomeByCategory).sort((a,b)=>b[1]-a[1]);
+  const expenseRows = Object.entries(expenseByCategory).sort((a,b)=>b[1]-a[1]);
+
+  const makeBar = (amount, total, color) => {
+    const pct = total ? Math.round(amount/total*100) : 0;
+    return `<div style="display:flex;align-items:center;gap:8px;flex:1;">
+      <div style="flex:1;background:var(--border);border-radius:4px;height:8px;overflow:hidden;">
+        <div style="width:${pct}%;background:${color};height:100%;border-radius:4px;transition:width 0.3s;"></div>
+      </div>
+      <span style="font-size:11px;color:var(--text-muted);white-space:nowrap;">${pct}%</span>
+    </div>`;
+  };
+
+  el.innerHTML = `
+    <!-- 전체 요약 카드 -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:20px;">
+      <div class="stat-box">
+        <div class="stat-num" style="color:var(--green);">${totalIncome.toLocaleString()}</div>
+        <div class="stat-label">총 수입(원)</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" style="color:var(--red);">${totalExpense.toLocaleString()}</div>
+        <div class="stat-label">총 지출(원)</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" style="color:${totalIncome-totalExpense>=0?'var(--green)':'var(--red)'};">${(totalIncome-totalExpense).toLocaleString()}</div>
+        <div class="stat-label">현재 잔액(원)</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">${ledgerData.length}</div>
+        <div class="stat-label">총 거래 건수</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;flex-wrap:wrap;">
+
+      <!-- 항목별 수입 -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+        <div style="background:var(--green);color:white;padding:10px 16px;font-size:13px;font-weight:700;">
+          📈 항목별 수입 현황
+        </div>
+        <div style="padding:14px;">
+          ${incomeRows.length ? incomeRows.map(([cat, amt]) => `
+            <div style="margin-bottom:12px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <span style="font-size:13px;font-weight:600;">${cat}</span>
+                <span style="font-size:13px;font-weight:700;color:var(--green);">${amt.toLocaleString()}원</span>
+              </div>
+              ${makeBar(amt, totalIncome, 'var(--green)')}
+            </div>
+          `).join('') : '<div style="color:var(--text-muted);font-size:13px;">데이터 없음</div>'}
+          <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;">
+            <span style="font-size:12px;font-weight:700;color:var(--text-muted);">합계</span>
+            <span style="font-size:14px;font-weight:700;color:var(--green);">${totalIncome.toLocaleString()}원</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 항목별 지출 -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+        <div style="background:#c0392b;color:white;padding:10px 16px;font-size:13px;font-weight:700;">
+          📉 항목별 지출 현황
+        </div>
+        <div style="padding:14px;">
+          ${expenseRows.length ? expenseRows.map(([cat, amt]) => `
+            <div style="margin-bottom:12px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <span style="font-size:13px;font-weight:600;">${cat}</span>
+                <span style="font-size:13px;font-weight:700;color:var(--red);">${amt.toLocaleString()}원</span>
+              </div>
+              ${makeBar(amt, totalExpense, 'var(--red)')}
+            </div>
+          `).join('') : '<div style="color:var(--text-muted);font-size:13px;">데이터 없음</div>'}
+          <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;">
+            <span style="font-size:12px;font-weight:700;color:var(--text-muted);">합계</span>
+            <span style="font-size:14px;font-weight:700;color:var(--red);">${totalExpense.toLocaleString()}원</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 월별 추이 -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:16px;">
+      <div style="background:var(--green);color:white;padding:10px 16px;font-size:13px;font-weight:700;">
+        📅 월별 수입/지출 추이
+      </div>
+      <div style="padding:14px;overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:400px;">
+          <thead>
+            <tr style="background:var(--bg);border-bottom:1px solid var(--border);">
+              <th style="padding:7px 12px;text-align:left;font-weight:700;color:var(--text-muted);">월</th>
+              <th style="padding:7px 10px;text-align:right;font-weight:700;color:var(--green);">수입</th>
+              <th style="padding:7px 10px;text-align:right;font-weight:700;color:var(--red);">지출</th>
+              <th style="padding:7px 10px;text-align:right;font-weight:700;color:var(--text-muted);">잔액</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(() => {
+              const monthMap = {};
+              ledgerData.forEach(e => {
+                const mon = e.date.slice(0,7);
+                if (!monthMap[mon]) monthMap[mon] = {income:0, expense:0};
+                if (e.type==='수입') monthMap[mon].income += e.amount;
+                else monthMap[mon].expense += e.amount;
+              });
+              let cumBalance = 0;
+              return Object.keys(monthMap).sort().map((m,i) => {
+                const s = monthMap[m];
+                cumBalance += s.income - s.expense;
+                return `<tr style="border-bottom:1px solid var(--border);background:${i%2===0?'var(--surface)':'var(--bg)'};">
+                  <td style="padding:7px 12px;font-weight:600;">${m.slice(0,4)}년 ${parseInt(m.slice(5))}월</td>
+                  <td style="padding:7px 10px;text-align:right;color:var(--green);font-weight:600;">+${s.income.toLocaleString()}</td>
+                  <td style="padding:7px 10px;text-align:right;color:var(--red);font-weight:600;">-${s.expense.toLocaleString()}</td>
+                  <td style="padding:7px 10px;text-align:right;font-weight:700;color:${cumBalance>=0?'var(--green)':'var(--red)'};">${cumBalance.toLocaleString()}</td>
+                </tr>`;
+              }).join('');
+            })()}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// ===== 수입/지출 =====
+function renderLedgerTable() {
+  // 월별 요약
+  const monthMap = {};
+  ledgerData.forEach(e => {
+    const mon = e.date.slice(0,7);
+    if(!monthMap[mon]) monthMap[mon] = {income:0, expense:0};
+    if(e.type==='수입') monthMap[mon].income += e.amount;
+    else monthMap[mon].expense += e.amount;
+  });
+  const months = Object.keys(monthMap).sort();
+  const summaryEl = document.getElementById('ledger-monthly-summary');
+  if(summaryEl) {
+    summaryEl.innerHTML = `
+      <div class="section-title" style="margin-bottom:10px;">월별 요약</div>
+      <div style="overflow-x:auto;">
+        <table style="border-collapse:collapse;font-size:12px;min-width:400px;">
+          <thead>
+            <tr style="background:var(--green);color:white;">
+              <th style="padding:7px 12px;">월</th>
+              <th style="padding:7px 10px;text-align:right;">수입</th>
+              <th style="padding:7px 10px;text-align:right;">지출</th>
+              <th style="padding:7px 10px;text-align:right;">잔액</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${months.map((m,i)=>{
+              const s = monthMap[m];
+              const bal = s.income - s.expense;
+              return `<tr style="border-bottom:1px solid var(--border);background:${i%2===0?'var(--surface)':'var(--bg)'};"> 
+                <td style="padding:6px 12px;font-weight:600;">${m.slice(0,4)}년 ${parseInt(m.slice(5))}월</td>
+                <td style="padding:6px 10px;text-align:right;color:var(--green);font-weight:600;">${s.income.toLocaleString()}</td>
+                <td style="padding:6px 10px;text-align:right;color:var(--red);font-weight:600;">${s.expense.toLocaleString()}</td>
+                <td style="padding:6px 10px;text-align:right;font-weight:700;color:${bal>=0?'var(--green)':'var(--red)'};">${bal.toLocaleString()}</td>
+              </tr>`;
+            }).join('')}
+            <tr style="background:var(--green);color:white;">
+              <td style="padding:7px 12px;font-weight:700;">합계</td>
+              <td style="padding:7px 10px;text-align:right;font-weight:700;">${months.reduce((s,m)=>s+monthMap[m].income,0).toLocaleString()}</td>
+              <td style="padding:7px 10px;text-align:right;font-weight:700;">${months.reduce((s,m)=>s+monthMap[m].expense,0).toLocaleString()}</td>
+              <td style="padding:7px 10px;text-align:right;font-weight:700;">${(months.reduce((s,m)=>s+monthMap[m].income,0)-months.reduce((s,m)=>s+monthMap[m].expense,0)).toLocaleString()}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  // 전체 내역
+  const tableEl = document.getElementById('ledger-table');
+  if(!tableEl) return;
+
+  // 잔액 재계산
+  let balance = 0;
+  const withBalance = ledgerData.map(e => {
+    if(e.type==='수입') balance += e.amount;
+    else balance -= e.amount;
+    return {...e, calcBalance: balance};
+  });
+
+  tableEl.innerHTML = `
+    <table style="border-collapse:collapse;font-size:12px;min-width:700px;width:100%;">
+      <thead>
+        <tr style="background:var(--green);color:white;">
+          <th style="padding:8px 10px;white-space:nowrap;">날짜</th>
+          <th style="padding:8px 8px;white-space:nowrap;">구분</th>
+          <th style="padding:8px 8px;white-space:nowrap;">카테고리</th>
+          <th style="padding:8px 10px;text-align:left;">상세내용</th>
+          <th style="padding:8px 10px;text-align:right;white-space:nowrap;">금액</th>
+          <th style="padding:8px 10px;text-align:right;white-space:nowrap;">잔액</th>
+          <th style="padding:8px 8px;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${withBalance.map((e,i)=>`
+          <tr style="border-bottom:1px solid var(--border);background:${i%2===0?'var(--surface)':'var(--bg)'};"> 
+            <td style="padding:6px 10px;color:var(--text-muted);">${e.date}</td>
+            <td style="padding:6px 8px;text-align:center;">
+              <span style="padding:2px 7px;border-radius:8px;font-size:11px;font-weight:700;
+                background:${e.type==='수입'?'var(--green-pale)':'#fde8e8'};
+                color:${e.type==='수입'?'var(--green)':'var(--red)'};">${e.type}</span>
+            </td>
+            <td style="padding:6px 8px;text-align:center;font-size:11px;color:var(--text-muted);">${e.category||''}</td>
+            <td style="padding:6px 10px;">${e.detail||''}</td>
+            <td style="padding:6px 10px;text-align:right;font-weight:600;color:${e.type==='수입'?'var(--green)':'var(--red)'};">
+              ${e.type==='수입'?'+':'-'}${e.amount.toLocaleString()}
+            </td>
+            <td style="padding:6px 10px;text-align:right;font-weight:700;color:${e.calcBalance>=0?'var(--green)':'var(--red)'};">
+              ${e.calcBalance.toLocaleString()}
+            </td>
+            <td style="padding:6px 8px;text-align:center;">
+              <button onclick="deleteLedgerEntry(${i})" style="background:none;border:1px solid var(--border);color:var(--text-muted);border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;">삭제</button>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+async function addLedgerEntry() {
+  const date = document.getElementById('ledger-date').value;
+  const type = document.getElementById('ledger-type').value;
+  const category = document.getElementById('ledger-category').value;
+  const detail = document.getElementById('ledger-detail').value.trim();
+  const amount = parseInt(document.getElementById('ledger-amount').value) || 0;
+  if(!date||!amount) { alert('날짜와 금액을 입력해주세요'); return; }
+
+  const entry = {date, type, category, detail, amount, order: Date.now()};
+  ledgerData.push(entry);
+  ledgerData.sort((a,b)=>{
+    if(a.date!==b.date) return a.date.localeCompare(b.date);
+    return (a.order||0)-(b.order||0);
+  });
+
+  localStorage.setItem('tkLedgerData', JSON.stringify(ledgerData));
+  try {
+    await db.collection('ledgerData').doc(String(entry.order)).set(entry);
+  } catch(e) { console.warn(e); }
+
+  document.getElementById('ledger-detail').value='';
+  document.getElementById('ledger-amount').value='';
+  renderLedgerTable();
+  showToast('항목 추가됐습니다');
+}
+
+async function deleteLedgerEntry(i) {
+  if(!confirm('이 항목을 삭제할까요?')) return;
+  const entry = ledgerData[i];
+  ledgerData.splice(i,1);
+  localStorage.setItem('tkLedgerData', JSON.stringify(ledgerData));
+  try {
+    if(entry.order) await db.collection('ledgerData').doc(String(entry.order)).delete();
+  } catch(e) { console.warn(e); }
+  renderLedgerTable();
+  showToast('삭제됐습니다');
+}
+
+// ========== 건의사항 ==========
+let suggestions = [];
+
+async function loadSuggestions() {
+  try {
+    const snap = await db.collection('suggestions').orderBy('date', 'desc').get();
+    suggestions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch(e) {
+    suggestions = JSON.parse(localStorage.getItem('tkSuggestions') || '[]');
+  }
+  renderSuggestions();
+}
+
+async function submitSuggestion() {
+  const name = document.getElementById('suggest-name').value.trim() || '익명';
+  const category = document.getElementById('suggest-category').value.trim() || '기타';
+  const content = document.getElementById('suggest-content').value.trim();
+  if (!content) { alert('내용을 입력해주세요'); return; }
+
+  const entry = {
+    id: String(Date.now()),
+    name, category, content,
+    date: new Date().toISOString()
+  };
+
+  suggestions.unshift(entry);
+  localStorage.setItem('tkSuggestions', JSON.stringify(suggestions));
+  try {
+    await db.collection('suggestions').doc(entry.id).set(entry);
+  } catch(e) { console.warn('건의사항 저장 오류:', e); }
+
+  document.getElementById('suggest-name').value = '';
+  document.getElementById('suggest-category').value = '';
+  document.getElementById('suggest-content').value = '';
+  document.getElementById('suggest-charcount').textContent = '0 / 500자';
+  renderSuggestions();
+  showToast('건의사항이 제출됐습니다 🎾');
+}
+
+async function deleteSuggestion(id) {
+  if (!confirm('이 건의사항을 삭제할까요?')) return;
+  suggestions = suggestions.filter(s => s.id !== id);
+  localStorage.setItem('tkSuggestions', JSON.stringify(suggestions));
+  try {
+    await db.collection('suggestions').doc(id).delete();
+  } catch(e) { console.warn('삭제 오류:', e); }
+  renderSuggestions();
+  showToast('삭제됐습니다');
+}
+
+function renderSuggestions() {
+  const el = document.getElementById('suggest-list');
+  if (!el) return;
+  if (!suggestions.length) {
+    el.innerHTML = '<div class="no-data">아직 건의사항이 없습니다<br><small>첫 번째 건의사항을 작성해보세요!</small></div>';
+    return;
+  }
+
+  const categoryColors = {
+    '대진': { bg: 'var(--green-pale)', color: 'var(--green)', border: 'var(--green-mid)' },
+    '코트': { bg: 'var(--blue-pale)', color: 'var(--blue)', border: '#b3cef0' },
+    '기타': { bg: 'var(--bg)', color: 'var(--text-muted)', border: 'var(--border)' },
+  };
+
+  el.innerHTML = `
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:10px;">총 ${suggestions.length}건</div>
+    ${suggestions.map(s => {
+      const d = new Date(s.date);
+      const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      const col = categoryColors[s.category] || categoryColors['기타'];
+      return `
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-weight:700;font-size:14px;">${s.name}</span>
+              <span style="padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;
+                background:${col.bg};color:${col.color};border:1px solid ${col.border};">
+                ${s.category}
+              </span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:11px;color:var(--text-muted);">${dateStr}</span>
+              <button onclick="deleteSuggestion('${s.id}')" style="background:none;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer;">삭제</button>
+            </div>
+          </div>
+          <div style="font-size:13px;line-height:1.7;white-space:pre-wrap;">${s.content}</div>
+        </div>
+      `;
+    }).join('')}
+  `;
+}
+
+// ========== 코트 예약 ==========
+const HOURS = Array.from({length:16}, (_,i) => `${String(i+6).padStart(2,'0')}:00`);
+const COURTS = Array.from({length:9}, (_,i) => i+1);
+const PRICE_PER_HOUR = 2500;
+
+let courtData = {}; // { 'YYYY-MM-DD': { 'HH:00_C': [name,...] } }
+
+async function loadCourtData() {
+  try {
+    const snap = await db.collection('courtReservations').get();
+    snap.docs.forEach(d => { courtData[d.id] = d.data(); }); // 덮어쓰지 않고 병합
+  } catch(e) {
+    const saved = JSON.parse(localStorage.getItem('tkCourtData') || '{}');
+    Object.assign(courtData, saved);
+  }
+}
+
+async function saveCourtDate(date) {
+  // localStorage에도 날짜별 병합 저장
+  const local = JSON.parse(localStorage.getItem('tkCourtData') || '{}');
+  local[date] = courtData[date] || {};
+  localStorage.setItem('tkCourtData', JSON.stringify(local));
+  try {
+    await db.collection('courtReservations').doc(date).set(courtData[date] || {});
+  } catch(e) { console.warn('코트 저장 오류:', e); }
+}
+
+function goToday() {
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('court-date').value = today;
+  document.getElementById('settle-month').value = today.slice(0,7);
+}
+
+async function renderMonthlySettlement() {
+  const month = document.getElementById('settle-month').value;
+  if (!month) { alert('월을 선택해주세요'); return; }
+  await loadCourtData();
+
+  const [year, mon] = month.split('-');
+  const personTotals = {};
+  const dayDetails = {}; // 날짜별 상세
+
+  // 해당 월의 모든 날짜 데이터 집계
+  Object.entries(courtData).forEach(([date, data]) => {
+    if (!date.startsWith(month)) return;
+    HOURS.forEach(h => {
+      COURTS.forEach(c => {
+        const key = `${h}_${c}`;
+        const bookers = (data[key] || []).filter(n=>n.trim());
+        if (bookers.length > 0) {
+          const share = Math.ceil(PRICE_PER_HOUR / bookers.length);
+          bookers.forEach(name => {
+            personTotals[name] = (personTotals[name] || 0) + share;
+            if (!dayDetails[name]) dayDetails[name] = {};
+            dayDetails[name][date] = (dayDetails[name][date] || 0) + share;
+          });
+        }
+      });
+    });
+  });
+
+  const el = document.getElementById('monthly-settlement');
+  const sorted = Object.entries(personTotals).sort((a,b) => b[1]-a[1]);
+
+  if (!sorted.length) {
+    el.innerHTML = `<div class="alert alert-warn" style="margin-top:12px;">${year}년 ${mon}월 예약 내역이 없습니다</div>`;
+    return;
+  }
+
+  const total = sorted.reduce((s,[,v])=>s+v,0);
+
+  el.innerHTML = `
+    <div style="margin-top:14px;">
+      <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:10px;">
+        ${year}년 ${mon}월 · 총 ${total.toLocaleString()}원
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${sorted.map(([name, amt], i) => {
+          const days = dayDetails[name];
+          const dayList = Object.entries(days).sort().map(([d,a])=>`${d.slice(5)}일 ${a.toLocaleString()}원`).join(' · ');
+          return `
+            <div style="background:${i===0?'var(--green-pale)':'var(--bg)'};border:1px solid ${i===0?'var(--green-mid)':'var(--border)'};border-radius:10px;padding:12px 14px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <span style="font-weight:700;font-size:14px;">${name}</span>
+                <span style="font-size:16px;font-weight:700;color:var(--green);">${amt.toLocaleString()}원</span>
+              </div>
+              <div style="font-size:11px;color:var(--text-muted);">${dayList}</div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+      <div style="margin-top:12px;padding:10px 14px;background:var(--accent-pale);border:1px solid #f5d97a;border-radius:8px;font-size:12px;color:#8a6000;">
+        ⚠️ 위 금액을 각자에게 입금 요청하세요 · 1시간 2,500원 기준 인원수 균등 분배
+      </div>
+    </div>
+  `;
+}
+
+async function loadAllCourtSchedules() {
+  await loadCourtData();
+  const wrap = document.getElementById('court-schedules-wrap');
+  wrap.innerHTML = '';
+  Object.keys(courtData).sort().forEach(date => {
+    if (!document.getElementById(`court-schedule-${date}`)) {
+      const div = document.createElement('div');
+      div.id = `court-schedule-${date}`;
+      wrap.appendChild(div);
+      renderCourtSchedule(date);
+    }
+  });
+}
+
+async function loadCourtSchedule() {
+  const date = document.getElementById('court-date').value;
+  if (!date) { alert('날짜를 선택해주세요'); return; }
+  await loadCourtData();
+
+  // 이미 표시된 날짜면 스킵
+  if (document.getElementById(`court-schedule-${date}`)) {
+    showToast(`${date} 시간표가 이미 표시돼 있어요`);
+    return;
+  }
+
+  const wrap = document.getElementById('court-schedules-wrap');
+  const div = document.createElement('div');
+  div.id = `court-schedule-${date}`;
+  wrap.appendChild(div);
+  renderCourtSchedule(date);
+}
+
+function renderCourtSchedule(date) {
+  const data = courtData[date] || {};
+  const d = new Date(date);
+  const dateLabel = `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${['일','월','화','수','목','금','토'][d.getDay()]})`;
+
+  // 정산 계산
+  const personTotals = {};
+  HOURS.forEach(h => {
+    COURTS.forEach(c => {
+      const key = `${h}_${c}`;
+      const bookers = data[key] || [];
+      if (bookers.length > 0) {
+        const share = Math.ceil(PRICE_PER_HOUR / bookers.length);
+        bookers.forEach(name => {
+          personTotals[name] = (personTotals[name] || 0) + share;
+        });
+      }
+    });
+  });
+
+  const totalRevenue = Object.values(personTotals).reduce((s,v)=>s+v,0);
+
+  let html = `
+    <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div style="font-size:15px;font-weight:700;color:var(--green);">📅 ${dateLabel}</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-danger btn-sm" onclick="deleteDateSchedule('${date}')">🗑 이 날 삭제</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:10px;font-size:11px;flex-wrap:wrap;">
+      <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:var(--green-pale);border:1px solid var(--green-mid);border-radius:3px;display:inline-block;"></span>인조잔디 (1~5코트)</span>
+      <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:var(--blue-pale);border:1px solid #b3cef0;border-radius:3px;display:inline-block;"></span>하드코트 (6~9코트)</span>
+      <span style="color:var(--text-muted);">칸 클릭 → 예약자 입력</span>
+    </div>
+    <div class="court-schedule-wrap">
+      <table class="court-table">
+        <thead>
+          <tr>
+            <th style="background:var(--green);">코트</th>
+            ${HOURS.map(h => `
+              <th style="background:var(--green);font-size:9px;">
+                ${h}<br><span style="opacity:0.7;">~${String(Number(h.slice(0,2))+1).padStart(2,'0')}:00</span>
+              </th>
+            `).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${COURTS.map(c => {
+            const isHard = c > 5;
+            return `
+            <tr>
+              <td class="time-cell" style="background:${isHard?'#e8f0fb':'#e8f5ee'};color:${isHard?'var(--blue)':'var(--green)'};">
+                ${c}코트<br><span style="font-size:9px;opacity:0.7;">${isHard?'하드':'인조'}</span>
+              </td>
+              ${HOURS.map(h => {
+                const key = `${h}_${c}`;
+                const bookers = data[key] || [];
+                const hasBooking = bookers.length > 0;
+                return `
+                  <td class="${hasBooking?(isHard?'booked-hard':'booked'):''}"
+                      style="${!hasBooking?(isHard?'background:#f5f8ff':'background:#f9fdf9'):''}"
+                      onclick="openCourtModal('${date}','${h}',${c})">
+                    <div class="court-cell-inner">
+                      ${bookers.map(name=>`<div class="booker-chip ${isHard?'hard':''}">${name}</div>`).join('')}
+                      ${!hasBooking?`<div style="color:#ccc;font-size:10px;">+</div>`:''}
+                    </div>
+                  </td>
+                `;
+              }).join('')}
+            </tr>
+          `}).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div id="settlement-area"></div>
+  `;
+
+  document.getElementById(`court-schedule-${date}`).innerHTML = html;
+}
+
+function openCourtModal(date, hour, court) {
+  const data = courtData[date] || {};
+  const key = `${hour}_${court}`;
+  const bookers = [...(data[key] || [])];
+  const isHard = court > 5;
+  const surfaceLabel = isHard ? '하드코트' : '인조잔디';
+  const endHour = `${String(Number(hour.slice(0,2))+1).padStart(2,'0')}:00`;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'court-modal-overlay';
+  overlay.id = 'court-modal-overlay';
+  overlay.onclick = (e) => { if(e.target === overlay) closeCourtModal(); };
+
+  overlay.innerHTML = `
+    <div class="court-modal">
+      <h3>🎾 ${court}코트 (${surfaceLabel})<br><span style="font-size:13px;font-weight:400;">${hour}~${endHour}</span></h3>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">예약자 이름 입력 (최대 4명) · 1인당 ${Math.ceil(PRICE_PER_HOUR / Math.max(bookers.length,1)).toLocaleString()}원</div>
+      <div id="booker-list">
+        ${bookers.map((name,i) => bookerRow(name, i)).join('')}
+      </div>
+      ${bookers.length < 4 ? `
+        <div class="booker-row" style="margin-top:6px;">
+          <input type="text" id="new-booker-input" placeholder="이름 입력 후 추가" maxlength="10"
+            onkeydown="if(event.key==='Enter')addBooker('${date}','${hour}',${court})">
+          <button class="btn btn-sm btn-primary" onclick="addBooker('${date}','${hour}',${court})">추가</button>
+        </div>
+      ` : '<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">최대 4명 입력됨</div>'}
+      <div id="modal-price-info" style="margin-top:10px;padding:8px 12px;background:var(--green-pale);border-radius:8px;font-size:12px;color:var(--green);">
+        ${bookers.length > 0 ? `총 ${PRICE_PER_HOUR.toLocaleString()}원 · ${bookers.length}명 · 1인당 <strong>${Math.ceil(PRICE_PER_HOUR/bookers.length).toLocaleString()}원</strong>` : '예약자를 추가해주세요'}
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button class="btn btn-primary" style="flex:1;" onclick="saveCourtCell('${date}','${hour}',${court})">저장</button>
+        <button class="btn btn-sm" style="border:1px solid var(--border);flex:1;" onclick="closeCourtModal()">취소</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  setTimeout(() => { const inp = document.getElementById('new-booker-input'); if(inp) inp.focus(); }, 100);
+
+  // 현재 편집 중인 bookers를 임시 저장
+  window._editBookers = [...bookers];
+  window._editKey = { date, hour, court };
+}
+
+function bookerRow(name, i) {
+  return `
+    <div class="booker-row" id="booker-row-${i}">
+      <input type="text" value="${name}" maxlength="10"
+        style="flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;"
+        onchange="window._editBookers[${i}]=this.value;updateModalPrice()">
+      <button onclick="removeBooker(${i})" style="background:none;border:1px solid var(--red);color:var(--red);border-radius:6px;padding:4px 8px;cursor:pointer;font-size:11px;">삭제</button>
+    </div>
+  `;
+}
+
+function addBooker(date, hour, court) {
+  const inp = document.getElementById('new-booker-input');
+  const name = inp?.value.trim();
+  if (!name) return;
+  if (window._editBookers.length >= 4) { alert('최대 4명까지 입력 가능합니다'); return; }
+  window._editBookers.push(name);
+  inp.value = '';
+  refreshModalBookers(date, hour, court);
+}
+
+function removeBooker(i) {
+  window._editBookers.splice(i, 1);
+  const {date, hour, court} = window._editKey;
+  refreshModalBookers(date, hour, court);
+}
+
+function refreshModalBookers(date, hour, court) {
+  document.getElementById('booker-list').innerHTML =
+    window._editBookers.map((name,i) => bookerRow(name, i)).join('');
+  updateModalPrice();
+  // 추가 버튼 표시/숨김
+  const addRow = document.querySelector('.court-modal .booker-row:last-of-type + div') || null;
+}
+
+function updateModalPrice() {
+  const cnt = window._editBookers.length;
+  const el = document.getElementById('modal-price-info');
+  if (!el) return;
+  el.innerHTML = cnt > 0
+    ? `총 ${PRICE_PER_HOUR.toLocaleString()}원 · ${cnt}명 · 1인당 <strong>${Math.ceil(PRICE_PER_HOUR/cnt).toLocaleString()}원</strong>`
+    : '예약자를 추가해주세요';
+}
+
+function saveCourtCell(date, hour, court) {
+  const key = `${hour}_${court}`;
+  if (!courtData[date]) courtData[date] = {};
+  courtData[date][key] = window._editBookers.filter(n => n.trim());
+  saveCourtDate(date);
+  closeCourtModal();
+  renderCourtSchedule(date);
+  showToast('예약 저장됨');
+}
+
+function closeCourtModal() {
+  const el = document.getElementById('court-modal-overlay');
+  if (el) el.remove();
+}
+
+function renderSettlement(date) {
+  const data = courtData[date] || {};
+  const personTotals = {};
+  const details = [];
+
+  HOURS.forEach(h => {
+    COURTS.forEach(c => {
+      const key = `${h}_${c}`;
+      const bookers = (data[key] || []).filter(n=>n.trim());
+      if (bookers.length > 0) {
+        const share = Math.ceil(PRICE_PER_HOUR / bookers.length);
+        bookers.forEach(name => {
+          personTotals[name] = (personTotals[name] || 0) + share;
+        });
+        details.push({ hour: h, court: c, bookers, share });
+      }
+    });
+  });
+
+  const total = Object.values(personTotals).reduce((s,v)=>s+v,0);
+  const sorted = Object.entries(personTotals).sort((a,b)=>b[1]-a[1]);
+
+  const el = document.getElementById('settlement-area');
+  if (!sorted.length) {
+    el.innerHTML = '<div class="alert alert-warn" style="margin-top:16px;">예약 내역이 없습니다</div>';
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="settlement-box" style="margin-top:16px;">
+      <div class="settlement-title">💰 정산 내역</div>
+      ${sorted.map(([name, amt]) => `
+        <div class="settlement-row">
+          <span>${name}</span>
+          <span class="settlement-amount">${amt.toLocaleString()}원</span>
+        </div>
+      `).join('')}
+      <div class="settlement-row" style="margin-top:6px;font-weight:700;font-size:14px;">
+        <span>합계</span>
+        <span class="settlement-amount">${total.toLocaleString()}원</span>
+      </div>
+    </div>
+  `;
+}
+
+
+function renderAllReservationSummary() {
+  const byDate = {};
+  Object.entries(courtData).sort().forEach(([date, data]) => {
+    const d = new Date(date);
+    const dateLabel = `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${['일','월','화','수','목','금','토'][d.getDay()]})`;
+    HOURS.forEach(h => {
+      COURTS.forEach(c => {
+        const key = `${h}_${c}`;
+        const bookers = (data[key] || []).filter(n=>n.trim());
+        if (bookers.length > 0) {
+          const endH = `${String(Number(h.slice(0,2))+1).padStart(2,'0')}:00`;
+          if (!byDate[date]) byDate[date] = { dateLabel, items: [] };
+          byDate[date].items.push({ hour: h, endH, court: c, isHard: c>5 });
+        }
+      });
+    });
+  });
+
+  const el = document.getElementById('all-reservation-summary');
+  const dates = Object.keys(byDate);
+
+  if (!dates.length) {
+    el.innerHTML = '<div class="alert alert-warn" style="margin-bottom:12px;">예약된 내역이 없습니다</div>';
+    return;
+  }
+
+  const totalCount = dates.reduce((s, d) => s + byDate[d].items.length, 0);
+
+  el.innerHTML = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px;">
+      <div style="background:var(--green);color:white;padding:10px 16px;font-size:14px;font-weight:700;display:flex;justify-content:space-between;align-items:center;">
+        <span>📋 전체 예약 현황</span>
+        <span style="font-size:12px;opacity:0.85;">${dates.length}일 · 총 ${totalCount}건</span>
+      </div>
+      ${dates.map(date => {
+        const { dateLabel, items } = byDate[date];
+        // 시간순 정렬
+        items.sort((a,b) => a.hour.localeCompare(b.hour) || a.court - b.court);
+        return `
+          <div style="border-bottom:2px solid var(--green-mid);">
+            <div style="padding:8px 16px;background:var(--green-pale);font-size:13px;font-weight:700;color:var(--green);display:flex;justify-content:space-between;align-items:center;">
+              <span>📅 ${dateLabel}</span>
+              <span style="font-size:11px;font-weight:400;color:var(--text-muted);">${items.length}건</span>
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:12px;">
+              <tbody>
+                ${items.map((b,i) => `
+                  <tr style="border-bottom:1px solid var(--border);background:${i%2===0?'var(--surface)':'var(--bg)'};">
+                    <td style="padding:7px 16px;color:var(--text-muted);width:40%;">${b.hour} ~ ${b.endH}</td>
+                    <td style="padding:7px 8px;text-align:center;width:30%;">
+                      <span style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;
+                        background:${b.isHard?'var(--blue)':'var(--green)'};color:white;">${b.court}코트</span>
+                    </td>
+                    <td style="padding:7px 16px;font-size:11px;color:${b.isHard?'var(--blue)':'var(--green)'};width:30%;">
+                      ${b.isHard?'하드코트':'인조잔디'}
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+async function deleteDateSchedule(date) {
+  if (!confirm(`${date} 코트 예약 내역을 삭제할까요?\n정산이 완료된 날짜만 삭제하세요.`)) return;
+  delete courtData[date];
+  const local = JSON.parse(localStorage.getItem('tkCourtData') || '{}');
+  delete local[date];
+  localStorage.setItem('tkCourtData', JSON.stringify(local));
+  try {
+    await db.collection('courtReservations').doc(date).delete();
+    showToast('삭제됐습니다');
+  } catch(e) { console.warn('삭제 오류:', e); }
+  // 화면에서 해당 날짜 div 제거
+  const el = document.getElementById(`court-schedule-${date}`);
+  if (el) el.remove();
+}
+
+// ========== NAV ==========
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  event.target.classList.add('active');
+  if (id === 'history') renderHistory();
+  if (id === 'ranking') renderRanking();
+  if (id === 'suggest') loadSuggestions();
+  if (id === 'finance') loadFinanceData();
+  if (id === 'court') {
+    goToday();
+    loadAllCourtSchedules();
+  }
+  if (id === 'settings') renderSettingsInfo();
+}
+
+// ========== 게스트 ==========
+let guests = []; // 대진표 생성용 임시 게스트
+let manualGuests = []; // 과거 경기 입력용 임시 게스트
+
+function addGuest() {
+  const name = document.getElementById('guest-name').value.trim();
+  const gender = document.getElementById('guest-gender').value;
+  const level = parseInt(document.getElementById('guest-level').value);
+  if (!name) { alert('게스트 이름을 입력하세요'); return; }
+  if (guests.find(g => g.name === name) || members.find(m => m.name === name)) {
+    alert('이미 있는 이름입니다'); return;
+  }
+  const guest = { id: Date.now(), name, gender, level, isGuest: true };
+  guests.push(guest);
+  document.getElementById('guest-name').value = '';
+  renderGuestList();
+  updateAttCount();
+}
+
+function removeGuest(id) {
+  guests = guests.filter(g => g.id !== id);
+  renderGuestList();
+  updateAttCount();
+}
+
+function renderGuestList() {
+  const el = document.getElementById('guest-list');
+  el.innerHTML = guests.map(g => `
+    <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:12px;background:var(--accent-pale);border:1px solid #f5d97a;font-size:12px;">
+      <div class="gender-badge gender-${g.gender}" style="width:18px;height:18px;font-size:10px;">${g.gender==='M'?'남':'여'}</div>
+      <span style="font-weight:500;">${g.name}</span>
+      <span style="opacity:0.6;">${levelLabel(g.level)}</span>
+      <span style="background:#8a6000;color:white;padding:1px 5px;border-radius:6px;font-size:10px;">게스트</span>
+      <button onclick="removeGuest(${g.id})" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:12px;padding:0;">✕</button>
+    </div>
+  `).join('');
+}
+
+function addManualGuest() {
+  const name = document.getElementById('manual-guest-name').value.trim();
+  const gender = document.getElementById('manual-guest-gender').value;
+  const level = parseInt(document.getElementById('manual-guest-level').value);
+  if (!name) { alert('게스트 이름을 입력하세요'); return; }
+  if (manualGuests.find(g => g.name === name) || members.find(m => m.name === name)) {
+    alert('이미 있는 이름입니다'); return;
+  }
+  const guest = { id: Date.now(), name, gender, level, isGuest: true };
+  manualGuests.push(guest);
+  document.getElementById('manual-guest-name').value = '';
+  renderManualGuestList();
+}
+
+function removeManualGuest(id) {
+  manualGuests = manualGuests.filter(g => g.id !== id);
+  renderManualGuestList();
+}
+
+function renderManualGuestList() {
+  const el = document.getElementById('manual-guest-list');
+  el.innerHTML = manualGuests.map(g => `
+    <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:12px;background:white;border:1px solid #f5d97a;font-size:12px;">
+      <div class="gender-badge gender-${g.gender}" style="width:18px;height:18px;font-size:10px;">${g.gender==='M'?'남':'여'}</div>
+      <span style="font-weight:500;">${g.name}</span>
+      <span style="opacity:0.6;">${levelLabel(g.level)}</span>
+      <span style="background:#8a6000;color:white;padding:1px 5px;border-radius:6px;font-size:10px;">게스트</span>
+      <button onclick="removeManualGuest(${g.id})" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:12px;padding:0;">✕</button>
+    </div>
+  `).join('');
+}
+
+// ========== 과거 경기 직접 입력 ==========
+function toggleManualEntry() {
+  const el = document.getElementById('manual-entry');
+  const isHidden = el.style.display === 'none';
+  el.style.display = isHidden ? 'block' : 'none';
+  if (isHidden) {
+    document.getElementById('manual-date').value = new Date().toISOString().slice(0,10);
+    manualGuests = [];
+    renderManualAttendance();
+    renderManualGuestList();
+    document.getElementById('manual-rounds-form').innerHTML = '';
+    document.getElementById('manual-save-result').innerHTML = '';
+  }
+}
+
+function renderManualAttendance() {
+  const grid = document.getElementById('manual-att-grid');
+  if (!members.length) {
+    grid.innerHTML = '<div class="no-data">먼저 회원 명단을 등록해주세요</div>';
+    return;
+  }
+  const sorted = [...members].sort((a,b) => a.name.localeCompare(b.name, 'ko'));
+  grid.innerHTML = sorted.map(m => `
+    <label class="attendance-item checked" id="matt-${m.id}">
+      <input type="checkbox" data-id="${m.id}" checked onchange="this.closest('label').classList.toggle('checked',this.checked)">
+      <div class="gender-badge gender-${m.gender}">${m.gender==='M'?'남':'여'}</div>
+      <div>
+        <div class="att-name">${m.name}</div>
+        <div class="att-meta">${levelLabel(m.level)}</div>
+      </div>
+    </label>
+  `).join('');
+}
+
+function buildManualForm() {
+  const courts = parseInt(document.getElementById('manual-courts').value) || 2;
+  const rounds = parseInt(document.getElementById('manual-rounds').value) || 3;
+  const attendeeIds = [...document.querySelectorAll('#manual-att-grid input:checked')].map(cb => parseInt(cb.dataset.id));
+  const attendees = [...members.filter(m => attendeeIds.includes(m.id)), ...manualGuests];
+
+  if (attendees.length < 4) {
+    document.getElementById('manual-rounds-form').innerHTML = '<div class="alert alert-warn">참가자를 4명 이상 선택해주세요</div>';
+    return;
+  }
+
+  let html = '';
+  for (let r = 1; r <= rounds; r++) {
+    html += `
+      <div style="margin-bottom:20px;">
+        <div class="round-header">
+          <span class="round-label">${r}라운드</span>
+        </div>
+    `;
+    for (let c = 1; c <= courts; c++) {
+      const key = `r${r}c${c}`;
+      html += `
+        <div class="court-card" style="margin-bottom:10px;">
+          <div class="court-header">
+            <span>${c}코트</span>
+            <select style="background:transparent;border:none;color:white;font-size:11px;outline:none;" id="${key}-gender">
+              <option value="남성">남성</option>
+              <option value="여성">여성</option>
+              <option value="혼합">혼합</option>
+            </select>
+          </div>
+          <div style="padding:10px 14px;">
+            <div style="font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:6px;">팀 A (2명 선택)</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;" id="${key}-teamA">
+              ${attendees.map(p=>`
+                <label style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;font-size:12px;cursor:pointer;border:1px solid var(--border);background:var(--bg);">
+                  <input type="checkbox" name="${key}-A" value="${p.id}" onchange="limitCheck(this,'${key}-A',2)">
+                  ${p.name} <span style="opacity:0.5;font-size:10px;">${levelLabel(p.level)}</span>
+                </label>
+              `).join('')}
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:6px;">팀 B (2명 선택)</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;" id="${key}-teamB">
+              ${attendees.map(p=>`
+                <label style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;font-size:12px;cursor:pointer;border:1px solid var(--border);background:var(--bg);">
+                  <input type="checkbox" name="${key}-B" value="${p.id}" onchange="limitCheck(this,'${key}-B',2)">
+                  ${p.name} <span style="opacity:0.5;font-size:10px;">${levelLabel(p.level)}</span>
+                </label>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    html += '</div>';
+  }
+
+  document.getElementById('manual-rounds-form').innerHTML = html;
+}
+
+function limitCheck(cb, name, max) {
+  const all = document.querySelectorAll(`input[name="${name}"]`);
+  const checked = [...all].filter(c => c.checked);
+  if (checked.length > max) {
+    cb.checked = false;
+    alert(`최대 ${max}명까지 선택할 수 있습니다`);
+  }
+  // 체크된 라벨 스타일
+  all.forEach(c => {
+    c.closest('label').style.background = c.checked ? 'var(--green-pale)' : 'var(--bg)';
+    c.closest('label').style.borderColor = c.checked ? 'var(--green-light)' : 'var(--border)';
+  });
+}
+
+function saveManualEntry() {
+  const dateVal = document.getElementById('manual-date').value;
+  if (!dateVal) { alert('날짜를 선택해주세요'); return; }
+  const courts = parseInt(document.getElementById('manual-courts').value) || 2;
+  const rounds = parseInt(document.getElementById('manual-rounds').value) || 3;
+  const attendeeIds = [...document.querySelectorAll('#manual-att-grid input:checked')].map(cb => parseInt(cb.dataset.id));
+  const attendees = [...members.filter(m => attendeeIds.includes(m.id)), ...manualGuests];
+
+  const bracket = [];
+  for (let r = 1; r <= rounds; r++) {
+    const games = [];
+    for (let c = 1; c <= courts; c++) {
+      const key = `r${r}c${c}`;
+      const teamAIds = [...document.querySelectorAll(`input[name="${key}-A"]:checked`)].map(cb => parseInt(cb.value));
+      const teamBIds = [...document.querySelectorAll(`input[name="${key}-B"]:checked`)].map(cb => parseInt(cb.value));
+      if (teamAIds.length === 0 && teamBIds.length === 0) continue; // 빈 코트 건너뜀
+      const teamA = attendees.filter(m => teamAIds.includes(m.id));
+      const teamB = attendees.filter(m => teamBIds.includes(m.id));
+      const genderLabel = document.getElementById(`${key}-gender`)?.value || '';
+      games.push({ teamA, teamB, genderLabel });
+    }
+    bracket.push({ round: r, games, resting: [] });
+  }
+
+  if (bracket.every(r => r.games.length === 0)) {
+    alert('최소 1경기 이상 입력해주세요');
+    return;
+  }
+
+  const entry = {
+    id: Date.now(),
+    date: new Date(dateVal).toISOString(),
+    attendees: attendees.map(p => p.name),
+    courts,
+    rounds,
+    bracket,
+    manual: true
+  };
+
+  history.unshift(entry);
+  history.sort((a,b) => new Date(b.date) - new Date(a.date));
+  saveHistory();
+
+  document.getElementById('manual-save-result').innerHTML =
+    '<div class="alert alert-success">✅ 경기 기록이 저장됐습니다!</div>';
+  setTimeout(() => {
+    toggleManualEntry();
+    renderHistory();
+  }, 1000);
+}
+
+// ========== 백업 / 복원 ==========
+function exportData() {
+  const data = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    members,
+    history
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStr = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  a.href = url;
+  a.download = `teamken_backup_${dateStr}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  document.getElementById('export-info').textContent =
+    `✅ 내보내기 완료 — 회원 ${members.length}명, 경기 기록 ${history.length}건`;
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.members || !data.history) throw new Error('올바른 백업 파일이 아닙니다');
+
+      // 회원 병합 (id 중복 건너뜀)
+      const existingMemberIds = new Set(members.map(m => m.id));
+      const newMembers = data.members.filter(m => !existingMemberIds.has(m.id));
+
+      // 경기 기록 병합 (id 중복 건너뜀)
+      const existingHistoryIds = new Set(history.map(h => h.id));
+      const newHistory = data.history.filter(h => !existingHistoryIds.has(h.id));
+
+      members = [...members, ...newMembers];
+      history = [...newHistory, ...history].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+      save();
+      saveHistory();
+      renderMembers();
+      renderAttendance();
+
+      document.getElementById('import-result').innerHTML =
+        `<div class="alert alert-success">✅ 가져오기 완료 — 회원 ${newMembers.length}명 추가, 경기 기록 ${newHistory.length}건 추가
+        ${newMembers.length < data.members.length || newHistory.length < data.history.length
+          ? `<br><span style="font-size:11px;">중복 항목 ${(data.members.length - newMembers.length) + (data.history.length - newHistory.length)}건 건너뜀</span>`
+          : ''}</div>`;
+    } catch(err) {
+      document.getElementById('import-result').innerHTML =
+        `<div class="alert alert-warn">❌ 오류: ${err.message}</div>`;
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ========== FIREBASE 마이그레이션 ==========
+function testFirebase() {
+  const apiKey = document.getElementById('fb-apiKey').value.trim();
+  const projectId = document.getElementById('fb-projectId').value.trim();
+  const appId = document.getElementById('fb-appId').value.trim();
+  const statusEl = document.getElementById('firebase-status');
+
+  if (!apiKey || !projectId || !appId) {
+    statusEl.innerHTML = '<div class="alert alert-warn">apiKey, projectId, appId 모두 입력해주세요</div>';
+    return;
+  }
+
+  statusEl.innerHTML = '<div class="alert alert-info">🔄 연결 확인 중...</div>';
+
+  // Firebase config 저장
+  localStorage.setItem('tkFirebaseConfig', JSON.stringify({ apiKey, projectId, appId }));
+
+  // Firebase SDK 동적 로드 후 연결 테스트
+  loadFirebaseSDK(() => {
+    try {
+      initFirebaseApp(apiKey, projectId, appId);
+      statusEl.innerHTML = '<div class="alert alert-success">✅ Firebase 연결 성공! 아래 버튼으로 데이터를 이전하세요.</div>';
+      document.getElementById('migrate-btn').style.display = 'inline-block';
+    } catch(err) {
+      statusEl.innerHTML = `<div class="alert alert-warn">❌ 연결 실패: ${err.message}</div>`;
+    }
+  });
+}
+
+function loadFirebaseSDK(callback) {
+  if (window._firebaseLoaded) { callback(); return; }
+  const s1 = document.createElement('script');
+  s1.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js';
+  s1.onload = () => {
+    const s2 = document.createElement('script');
+    s2.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js';
+    s2.onload = () => { window._firebaseLoaded = true; callback(); };
+    document.head.appendChild(s2);
+  };
+  document.head.appendChild(s1);
+}
+
+function initFirebaseApp(apiKey, projectId, appId) {
+  if (firebase.apps.length) firebase.apps.forEach(app => app.delete());
+  firebase.initializeApp({ apiKey, authDomain: `${projectId}.firebaseapp.com`, projectId, appId });
+  window._db = firebase.firestore();
+}
+
+async function migrateToFirebase() {
+  const statusEl = document.getElementById('firebase-status');
+  const btn = document.getElementById('migrate-btn');
+  if (!window._db) { statusEl.innerHTML = '<div class="alert alert-warn">먼저 연결 테스트를 해주세요</div>'; return; }
+
+  btn.disabled = true;
+  btn.textContent = '이전 중...';
+  statusEl.innerHTML = '<div class="alert alert-info">🔄 데이터 이전 중...</div>';
+
+  try {
+    const db = window._db;
+
+    // 회원 이전
+    const memberBatch = db.batch();
+    members.forEach(m => {
+      memberBatch.set(db.collection('members').doc(String(m.id)), m);
+    });
+    await memberBatch.commit();
+
+    // 경기 기록 이전
+    const historyBatch = db.batch();
+    history.forEach(h => {
+      historyBatch.set(db.collection('history').doc(String(h.id)), h);
+    });
+    await historyBatch.commit();
+
+    // config 저장
+    const cfg = JSON.parse(localStorage.getItem('tkFirebaseConfig'));
+    localStorage.setItem('tkFirebaseActive', JSON.stringify(cfg));
+
+    statusEl.innerHTML = `
+      <div class="alert alert-success">
+        ✅ 마이그레이션 완료!<br>
+        회원 ${members.length}명, 경기 기록 ${history.length}건이 Firebase로 이전됐습니다.<br>
+        <span style="font-size:11px;">이제 파일을 Firebase 연동 버전으로 교체하면 클라우드 저장이 활성화됩니다.</span>
+      </div>`;
+    btn.textContent = '✅ 이전 완료';
+  } catch(err) {
+    statusEl.innerHTML = `<div class="alert alert-warn">❌ 이전 실패: ${err.message}</div>`;
+    btn.disabled = false;
+    btn.textContent = '☁️ Firebase로 데이터 이전';
+  }
+}
+
+// ========== 초기화 ==========
+function resetMembers() {
+  if (!confirm(`회원 명단 ${members.length}명을 모두 삭제할까요?\n먼저 백업을 권장합니다.`)) return;
+  members = [];
+  save();
+  renderMembers();
+  renderAttendance();
+  alert('회원 명단이 초기화됐습니다');
+}
+
+function resetHistory() {
+  if (!confirm(`경기 기록 ${history.length}건을 모두 삭제할까요?\n먼저 백업을 권장합니다.`)) return;
+  history = [];
+  saveHistory();
+  alert('경기 기록이 초기화됐습니다');
+}
+
+function resetAll() {
+  if (!confirm('모든 데이터(회원+경기기록)를 삭제할까요?\n이 작업은 되돌릴 수 없습니다.')) return;
+  if (!confirm('정말 삭제합니다. 백업은 하셨나요?')) return;
+  members = []; history = [];
+  save(); saveHistory();
+  renderMembers(); renderAttendance();
+  alert('전체 초기화 완료');
+}
+
+function renderSettingsInfo() {
+  document.getElementById('export-info').textContent =
+    `현재 저장 현황 — 회원 ${members.length}명 · 경기 기록 ${history.length}건`;
+  // 저장된 Firebase config 불러오기
+  const saved = localStorage.getItem('tkFirebaseConfig');
+  if (saved) {
+    const cfg = JSON.parse(saved);
+    document.getElementById('fb-apiKey').value = cfg.apiKey || '';
+    document.getElementById('fb-projectId').value = cfg.projectId || '';
+    document.getElementById('fb-appId').value = cfg.appId || '';
+  }
+}
+
+// ========== INIT ==========
+loadData();
+document.addEventListener('input', e => {
+  if (e.target.id === 'suggest-content') {
+    document.getElementById('suggest-charcount').textContent = `${e.target.value.length} / 500자`;
+  }
+});
+</script>
+</body>
+</html>
