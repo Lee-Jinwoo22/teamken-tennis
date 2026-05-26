@@ -1622,11 +1622,30 @@ function swapPlayer(ri, ci, team, pi, newId) {
   if (!currentBracket) return;
   const newPlayer = currentBracket.attendees.find(p => p.id == newId);
   if (!newPlayer) return;
+
+  // 기존 선수
+  const oldPlayer = team === 'A'
+    ? currentBracket.bracket[ri].games[ci].teamA[pi]
+    : currentBracket.bracket[ri].games[ci].teamB[pi];
+
+  // 선수 교체
   if (team === 'A') {
     currentBracket.bracket[ri].games[ci].teamA[pi] = newPlayer;
   } else {
     currentBracket.bracket[ri].games[ci].teamB[pi] = newPlayer;
   }
+
+  // 이 라운드에서 실제 경기하는 선수 ID 집합
+  const round = currentBracket.bracket[ri];
+  const playingIds = new Set(
+    round.games.flatMap(g => [...g.teamA, ...g.teamB]).map(p => p.id)
+  );
+
+  // 휴식자 재계산: 참가자 중 이 라운드에 안 뛰는 사람
+  currentBracket.bracket[ri].resting = currentBracket.attendees.filter(
+    p => !playingIds.has(p.id)
+  );
+
   renderBracket(currentBracket);
 }
 
