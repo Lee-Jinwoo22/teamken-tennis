@@ -1623,24 +1623,18 @@ function swapPlayer(ri, ci, team, pi, newId) {
   const newPlayer = currentBracket.attendees.find(p => p.id == newId);
   if (!newPlayer) return;
 
-  // 이 경기(코트)에 이미 같은 선수가 있는지 체크
   const game = currentBracket.bracket[ri].games[ci];
-  const allInGame = [...game.teamA, ...game.teamB];
-  const duplicate = allInGame.find((p, idx) => {
-    // 교체하려는 자기 자신 위치는 제외하고 비교
-    const isOwn = (team === 'A' && idx === pi) || (team === 'B' && idx === game.teamA.length + pi);
-    return !isOwn && p.id == newId;
-  });
 
-  if (duplicate) {
+  // 이 경기에 이미 있는 선수 ID 전체 수집 (교체할 자리 제외)
+  const teamAIds = game.teamA.map((p,i) => (team==='A' && i===pi) ? null : p.id);
+  const teamBIds = game.teamB.map((p,i) => (team==='B' && i===pi) ? null : p.id);
+  const existingIds = [...teamAIds, ...teamBIds].filter(id => id !== null);
+
+  if (existingIds.includes(newPlayer.id)) {
     alert(`${newPlayer.name}은 이미 이 경기에 있어요!`);
-    // 드롭다운 원래 값으로 되돌리기
-    renderBracket(currentBracket);
+    renderBracket(currentBracket); // 드롭다운 원래대로 복원
     return;
   }
-
-  // 기존 선수
-  const oldPlayer = team === 'A' ? game.teamA[pi] : game.teamB[pi];
 
   // 선수 교체
   if (team === 'A') {
@@ -1649,13 +1643,11 @@ function swapPlayer(ri, ci, team, pi, newId) {
     currentBracket.bracket[ri].games[ci].teamB[pi] = newPlayer;
   }
 
-  // 이 라운드에서 실제 경기하는 선수 ID 집합
+  // 휴식자 재계산
   const round = currentBracket.bracket[ri];
   const playingIds = new Set(
     round.games.flatMap(g => [...g.teamA, ...g.teamB]).map(p => p.id)
   );
-
-  // 휴식자 재계산
   currentBracket.bracket[ri].resting = currentBracket.attendees.filter(
     p => !playingIds.has(p.id)
   );
