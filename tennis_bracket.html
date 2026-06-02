@@ -1959,6 +1959,42 @@ function renderFeeTable() {
     <div class="stat-box"><div class="stat-num" style="font-size:18px;">${totalAmount.toLocaleString()}</div><div class="stat-label">납부 총액(원)</div></div>
   `;
 
+  // 월별 납부 인원 요약
+  const monthSummaryHtml = `
+    <div style="margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+      <div style="background:var(--green);color:white;padding:8px 14px;font-size:13px;font-weight:700;">📅 월별 납부 현황</div>
+      <div style="overflow-x:auto;">
+        <table style="border-collapse:collapse;font-size:12px;min-width:400px;width:100%;">
+          <thead>
+            <tr style="background:var(--bg);border-bottom:1px solid var(--border);">
+              <th style="padding:7px 14px;text-align:left;font-weight:700;color:var(--text-muted);">월</th>
+              <th style="padding:7px 10px;text-align:center;font-weight:700;color:var(--green);">납부</th>
+              <th style="padding:7px 10px;text-align:center;font-weight:700;color:var(--red);">미납</th>
+              <th style="padding:7px 10px;text-align:center;font-weight:700;color:var(--text-muted);">미입력</th>
+              <th style="padding:7px 10px;text-align:right;font-weight:700;color:var(--green);">납부금액</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${yearMonths.map((m, mi) => {
+              const paid = feeData.filter(mem => mem.payments[m]==='O').length;
+              const unpaid = feeData.filter(mem => mem.payments[m]==='X').length;
+              const empty = feeData.filter(mem => !mem.payments[m]).length;
+              const amt = paid * monthlyFee;
+              return `<tr style="border-bottom:1px solid var(--border);background:${mi%2===0?'var(--surface)':'var(--bg)'};">
+                <td style="padding:7px 14px;font-weight:600;">${m.slice(0,4)}년 ${parseInt(m.slice(5))}월</td>
+                <td style="padding:7px 10px;text-align:center;font-weight:700;color:var(--green);">${paid}명</td>
+                <td style="padding:7px 10px;text-align:center;color:var(--red);">${unpaid}명</td>
+                <td style="padding:7px 10px;text-align:center;color:var(--text-muted);">${empty}명</td>
+                <td style="padding:7px 10px;text-align:right;font-weight:700;color:var(--green);">${amt.toLocaleString()}원</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  document.getElementById('fee-summary').innerHTML += monthSummaryHtml;
+
   if(!yearMonths.length) {
     document.getElementById('fee-table').innerHTML = '<div class="no-data">해당 연도 데이터가 없습니다</div>';
     return;
