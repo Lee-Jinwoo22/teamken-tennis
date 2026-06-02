@@ -2324,8 +2324,33 @@ function renderLedgerTable() {
             <td style="padding:6px 10px;text-align:right;font-weight:700;color:${e.calcBalance>=0?'var(--green)':'var(--red)'};">
               ${e.calcBalance.toLocaleString()}
             </td>
-            <td style="padding:6px 8px;text-align:center;">
+            <td style="padding:6px 8px;text-align:center;white-space:nowrap;">
+              <button onclick="editLedgerEntry(${i})" style="background:none;border:1px solid var(--blue);color:var(--blue);border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;margin-right:3px;">수정</button>
               <button onclick="deleteLedgerEntry(${i})" style="background:none;border:1px solid var(--border);color:var(--text-muted);border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;">삭제</button>
+            </td>
+          </tr>
+          <!-- 수정 폼 행 -->
+          <tr id="edit-row-${i}" style="display:none;background:var(--blue-pale);">
+            <td colspan="7" style="padding:10px 14px;">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                <input type="date" id="edit-date-${i}" value="${e.date}" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
+                <select id="edit-type-${i}" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
+                  <option value="수입" ${e.type==='수입'?'selected':''}>수입</option>
+                  <option value="지출" ${e.type==='지출'?'selected':''}>지출</option>
+                </select>
+                <select id="edit-category-${i}" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
+                  <option value="월회비" ${e.category==='월회비'?'selected':''}>월회비</option>
+                  <option value="게스트참가비" ${e.category==='게스트참가비'?'selected':''}>게스트참가비</option>
+                  <option value="코트비" ${e.category==='코트비'?'selected':''}>코트비</option>
+                  <option value="간식및음료" ${e.category==='간식및음료'?'selected':''}>간식및음료</option>
+                  <option value="용품" ${e.category==='용품'?'selected':''}>용품</option>
+                  <option value="기타" ${e.category==='기타'?'selected':''}>기타</option>
+                </select>
+                <input type="text" id="edit-detail-${i}" value="${e.detail||''}" placeholder="상세내용" style="flex:1;min-width:100px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
+                <input type="number" id="edit-amount-${i}" value="${e.amount}" style="width:100px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
+                <button onclick="saveLedgerEdit(${i})" style="background:var(--green);color:white;border:none;border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;">저장</button>
+                <button onclick="cancelLedgerEdit(${i})" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;">취소</button>
+              </div>
             </td>
           </tr>
         `).join('')}
@@ -2358,6 +2383,44 @@ async function addLedgerEntry() {
   document.getElementById('ledger-amount').value='';
   renderLedgerTable();
   showToast('항목 추가됐습니다');
+}
+
+function editLedgerEntry(i) {
+  // 다른 수정 폼 닫기
+  document.querySelectorAll('[id^="edit-row-"]').forEach(el => el.style.display = 'none');
+  document.getElementById(`edit-row-${i}`).style.display = 'table-row';
+}
+
+function cancelLedgerEdit(i) {
+  document.getElementById(`edit-row-${i}`).style.display = 'none';
+}
+
+async function saveLedgerEdit(i) {
+  const date = document.getElementById(`edit-date-${i}`).value;
+  const type = document.getElementById(`edit-type-${i}`).value;
+  const category = document.getElementById(`edit-category-${i}`).value;
+  const detail = document.getElementById(`edit-detail-${i}`).value.trim();
+  const amount = parseInt(document.getElementById(`edit-amount-${i}`).value) || 0;
+  if (!date || !amount) { alert('날짜와 금액을 입력해주세요'); return; }
+
+  ledgerData[i] = { ...ledgerData[i], date, type, category, detail, amount };
+  localStorage.removeItem('tkLedgerData');
+
+  try {
+    const snap = await db.collection('ledgerData').get();
+    const batch = db.batch();
+    snap.docs.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+    const batch2 = db.batch();
+    ledgerData.forEach((e, idx) => {
+      const newId = `entry_${String(idx).padStart(4,'0')}`;
+      batch2.set(db.collection('ledgerData').doc(newId), { ...e, order: idx });
+    });
+    await batch2.commit();
+    showToast('수정됐습니다');
+  } catch(e) { console.warn(e); }
+
+  await loadFinanceData();
 }
 
 async function deleteLedgerEntry(i) {
