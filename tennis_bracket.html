@@ -880,6 +880,7 @@
         </div>
       </div>
       <div id="fee-summary" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;"></div>
+      <div id="fee-month-summary" style="margin-bottom:14px;"></div>
     </div>
     <div style="overflow-x:auto;">
       <div id="fee-table"></div>
@@ -1960,8 +1961,8 @@ function renderFeeTable() {
   `;
 
   // 월별 납부 인원 요약
-  const monthSummaryHtml = `
-    <div style="margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+  document.getElementById('fee-month-summary').innerHTML = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
       <div style="background:var(--green);color:white;padding:8px 14px;font-size:13px;font-weight:700;">📅 월별 납부 현황</div>
       <div style="overflow-x:auto;">
         <table style="border-collapse:collapse;font-size:12px;min-width:400px;width:100%;">
@@ -1976,9 +1977,9 @@ function renderFeeTable() {
           </thead>
           <tbody>
             ${yearMonths.map((m, mi) => {
-              const paid = feeData.filter(mem => mem.payments[m]==='O').length;
-              const unpaid = feeData.filter(mem => mem.payments[m]==='X').length;
-              const empty = feeData.filter(mem => !mem.payments[m]).length;
+              const paid = feeData.filter(mem => mem.payments && mem.payments[m]==='O').length;
+              const unpaid = feeData.filter(mem => mem.payments && mem.payments[m]==='X').length;
+              const empty = feeData.filter(mem => !mem.payments || !mem.payments[m]).length;
               const amt = paid * monthlyFee;
               return `<tr style="border-bottom:1px solid var(--border);background:${mi%2===0?'var(--surface)':'var(--bg)'};">
                 <td style="padding:7px 14px;font-weight:600;">${m.slice(0,4)}년 ${parseInt(m.slice(5))}월</td>
@@ -1993,7 +1994,6 @@ function renderFeeTable() {
       </div>
     </div>
   `;
-  document.getElementById('fee-summary').innerHTML += monthSummaryHtml;
 
   if(!yearMonths.length) {
     document.getElementById('fee-table').innerHTML = '<div class="no-data">해당 연도 데이터가 없습니다</div>';
