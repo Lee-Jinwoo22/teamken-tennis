@@ -2363,10 +2363,22 @@ async function addLedgerEntry() {
 async function deleteLedgerEntry(i) {
   if(!confirm('이 항목을 삭제할까요?')) return;
   const entry = ledgerData[i];
-  ledgerData.splice(i,1);
+  ledgerData.splice(i, 1);
   localStorage.setItem('tkLedgerData', JSON.stringify(ledgerData));
   try {
-    if(entry.order) await db.collection('ledgerData').doc(String(entry.order)).delete();
+    if (entry.order) {
+      await db.collection('ledgerData').doc(String(entry.order)).delete();
+    } else {
+      // order 없는 기존 데이터 - 전체 재저장
+      const snap = await db.collection('ledgerData').get();
+      const batch = db.batch();
+      snap.docs.forEach(d => batch.delete(d.ref));
+      ledgerData.forEach((e, idx) => {
+        const id = e.order ? String(e.order) : String(idx + 1);
+        batch.set(db.collection('ledgerData').doc(id), { ...e, order: e.order || idx + 1 });
+      });
+      await batch.commit();
+    }
   } catch(e) { console.warn(e); }
   renderLedgerTable();
   showToast('삭제됐습니다');
