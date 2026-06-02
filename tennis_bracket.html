@@ -2363,20 +2363,27 @@ async function addLedgerEntry() {
 async function deleteLedgerEntry(i) {
   if(!confirm('이 항목을 삭제할까요?')) return;
   ledgerData.splice(i, 1);
-  localStorage.setItem('tkLedgerData', JSON.stringify(ledgerData));
+  localStorage.removeItem('tkLedgerData'); // 캐시 완전 제거
   try {
-    // 전체 삭제 후 재저장 (가장 확실한 방법)
+    // Firebase 전체 삭제 후 재저장
     const snap = await db.collection('ledgerData').get();
     const batch = db.batch();
     snap.docs.forEach(d => batch.delete(d.ref));
-    ledgerData.forEach((e, idx) => {
-      const id = (e.order !== undefined && e.order !== null) ? String(e.order) : String(idx + 1);
-      batch.set(db.collection('ledgerData').doc(id), { ...e, order: e.order ?? idx + 1 });
-    });
     await batch.commit();
-  } catch(e) { console.warn(e); }
-  renderLedgerTable();
-  showToast('삭제됐습니다');
+    // 남은 데이터 새 ID로 재저장
+    const batch2 = db.batch();
+    ledgerData.forEach((e, idx) => {
+      const newId = `entry_${String(idx).padStart(4,'0')}`;
+      batch2.set(db.collection('ledgerData').doc(newId), { ...e, order: idx });
+    });
+    await batch2.commit();
+    showToast('삭제됐습니다');
+  } catch(e) {
+    console.warn(e);
+    showToast('삭제 중 오류가 발생했습니다');
+  }
+  // Firebase에서 새로 불러오기
+  await loadFinanceData();
 }
 
 // ========== 건의사항 ==========
