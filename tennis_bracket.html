@@ -773,6 +773,7 @@
       <button class="btn btn-accent" onclick="generateBracket()">🎾 대진표 생성</button>
       <button class="btn btn-sm" style="border:1px solid var(--border);" onclick="shuffleBracket()">🔀 다시 섞기</button>
       <button class="btn btn-sm btn-primary" onclick="saveBracket()" id="save-btn" style="display:none;">💾 경기 기록 저장</button>
+      <button class="btn btn-sm" style="border:1px solid var(--accent);color:#8a6000;background:var(--accent-pale);" onclick="copyBracketText()" id="copy-btn" style="display:none;">📋 카톡 복사</button>
     </div>
     <div class="shuffle-note">* 동일 설정에서 다시 섞기로 여러 대진 옵션을 볼 수 있습니다</div>
   </div>
@@ -1385,6 +1386,7 @@ function generateBracket() {
   currentBracket = { attendees, bracket, courts, rounds, genderSep, playCounts, date: new Date().toISOString() };
   renderBracket(currentBracket);
   document.getElementById('save-btn').style.display = 'inline-block';
+  document.getElementById('copy-btn').style.display = 'inline-block';
 }
 
 function shuffleBracket() {
@@ -1493,6 +1495,50 @@ function renderBracket(data) {
 
   html += '</div>';
   document.getElementById('bracket-result').innerHTML = html;
+}
+
+function copyBracketText() {
+  if (!currentBracket) return;
+  const { bracket, attendees, courts, rounds } = currentBracket;
+  const d = new Date();
+  const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+  const males = attendees.filter(p=>p.gender==='M').length;
+  const females = attendees.filter(p=>p.gender==='F').length;
+
+  let text = `🎾 팀켄테니스 대진표\n`;
+  text += `📅 ${dateStr} · ${attendees.length}명 참가 (남${males}/여${females})\n`;
+  text += `${'─'.repeat(24)}\n`;
+
+  bracket.forEach(round => {
+    text += `\n【 ${round.round}라운드 】\n`;
+    round.games.forEach((game, ci) => {
+      const teamA = game.teamA.map(p=>p.name).join('·');
+      const teamB = game.teamB.map(p=>p.name).join('·');
+      const label = game.genderLabel ? ` (${game.genderLabel})` : '';
+      text += `[${ci+1}코트${label}]\n`;
+      text += `  🔵 ${teamA}\n`;
+      text += `  🔴 ${teamB}\n`;
+    });
+    if (round.resting && round.resting.length > 0) {
+      text += `  🪑 휴식: ${round.resting.map(p=>p.name).join(', ')}\n`;
+    }
+  });
+
+  text += `\n${'─'.repeat(24)}\n`;
+  text += `⚡ TeamKen Tennis League`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('📋 클립보드에 복사됐어요! 카톡에 붙여넣기 하세요');
+  }).catch(() => {
+    // 클립보드 API 실패 시 텍스트 영역으로 대체
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('📋 복사됐어요! 카톡에 붙여넣기 하세요');
+  });
 }
 
 // ========== SAVE / HISTORY ==========
