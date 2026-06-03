@@ -774,6 +774,7 @@
       <button class="btn btn-sm" style="border:1px solid var(--border);" onclick="shuffleBracket()">🔀 다시 섞기</button>
       <button class="btn btn-sm btn-primary" onclick="saveBracket()" id="save-btn" style="display:none;">💾 경기 기록 저장</button>
       <button class="btn btn-sm" style="border:1px solid var(--accent);color:#8a6000;background:var(--accent-pale);" onclick="copyBracketText()" id="copy-btn" style="display:none;">📋 카톡 복사</button>
+      <button class="btn btn-sm" style="border:1px solid var(--blue);color:var(--blue);background:var(--blue-pale);" onclick="saveBracketImage()" id="img-btn" style="display:none;">🖼️ 이미지 저장</button>
     </div>
     <div class="shuffle-note">* 동일 설정에서 다시 섞기로 여러 대진 옵션을 볼 수 있습니다</div>
   </div>
@@ -1387,6 +1388,7 @@ function generateBracket() {
   renderBracket(currentBracket);
   document.getElementById('save-btn').style.display = 'inline-block';
   document.getElementById('copy-btn').style.display = 'inline-block';
+  document.getElementById('img-btn').style.display = 'inline-block';
 }
 
 function shuffleBracket() {
@@ -1497,40 +1499,77 @@ function renderBracket(data) {
   document.getElementById('bracket-result').innerHTML = html;
 }
 
+function saveBracketImage() {
+  const el = document.getElementById('bracket-result');
+  if (!el || !el.innerHTML) { alert('먼저 대진표를 생성해주세요'); return; }
+
+  showToast('이미지 생성 중...');
+
+  // html2canvas 동적 로드
+  if (!window.html2canvas) {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    script.onload = () => _captureAndDownload(el);
+    document.head.appendChild(script);
+  } else {
+    _captureAndDownload(el);
+  }
+}
+
+function _captureAndDownload(el) {
+  const d = new Date();
+  const dateStr = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+
+  html2canvas(el, {
+    backgroundColor: '#f7f9f7',
+    scale: 2, // 고해상도
+    useCORS: true,
+    padding: 16,
+  }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = `팀켄테니스_대진표_${dateStr}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToast('✅ 이미지 저장됐어요! 카톡에 파일로 전송하세요');
+  }).catch(e => {
+    console.warn(e);
+    showToast('이미지 생성 실패 — 캡처를 직접 사용해주세요');
+  });
+}
+
 function copyBracketText() {
   if (!currentBracket) return;
-  const { bracket, attendees, courts, rounds } = currentBracket;
+  const { bracket, attendees } = currentBracket;
   const d = new Date();
   const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
-  const males = attendees.filter(p=>p.gender==='M').length;
-  const females = attendees.filter(p=>p.gender==='F').length;
+  const days = ['일','월','화','수','목','금','토'];
+  const dayStr = days[d.getDay()];
 
   let text = `🎾 팀켄테니스 대진표\n`;
-  text += `📅 ${dateStr} · ${attendees.length}명 참가 (남${males}/여${females})\n`;
-  text += `${'─'.repeat(24)}\n`;
+  text += `${dateStr} (${dayStr}) · ${attendees.length}명\n`;
 
   bracket.forEach(round => {
-    text += `\n【 ${round.round}라운드 】\n`;
+    text += `\n${'━'.repeat(20)}\n`;
+    text += `         ${round.round}라운드\n`;
+    text += `${'━'.repeat(20)}\n`;
     round.games.forEach((game, ci) => {
-      const teamA = game.teamA.map(p=>p.name).join('·');
-      const teamB = game.teamB.map(p=>p.name).join('·');
-      const label = game.genderLabel ? ` (${game.genderLabel})` : '';
-      text += `[${ci+1}코트${label}]\n`;
-      text += `  🔵 ${teamA}\n`;
-      text += `  🔴 ${teamB}\n`;
+      const teamA = game.teamA.map(p=>p.name).join(' · ');
+      const teamB = game.teamB.map(p=>p.name).join(' · ');
+      text += `\n${ci+1}코트\n`;
+      text += `🔵 ${teamA}\n`;
+      text += `        vs\n`;
+      text += `🔴 ${teamB}\n`;
     });
     if (round.resting && round.resting.length > 0) {
-      text += `  🪑 휴식: ${round.resting.map(p=>p.name).join(', ')}\n`;
+      text += `\n🪑 휴식 · ${round.resting.map(p=>p.name).join(', ')}\n`;
     }
   });
 
-  text += `\n${'─'.repeat(24)}\n`;
-  text += `⚡ TeamKen Tennis League`;
+  text += `\n${'━'.repeat(20)}`;
 
   navigator.clipboard.writeText(text).then(() => {
-    showToast('📋 클립보드에 복사됐어요! 카톡에 붙여넣기 하세요');
+    showToast('📋 복사됐어요! 카톡에 붙여넣기 하세요');
   }).catch(() => {
-    // 클립보드 API 실패 시 텍스트 영역으로 대체
     const ta = document.createElement('textarea');
     ta.value = text;
     document.body.appendChild(ta);
