@@ -1441,11 +1441,25 @@ function renderBracket(data) {
       const avgA = (game.teamA.reduce((s,p)=>s+p.level,0)/game.teamA.length).toFixed(1);
       const avgB = (game.teamB.reduce((s,p)=>s+p.level,0)/game.teamB.length).toFixed(1);
       const allOptions = attendees.map(p => `<option value="${p.id}">${p.name} (${levelLabel(p.level)})</option>`).join('');
-      const makeSelect = (player, team, pi) =>
-        `<select onchange="swapPlayer(${ri},${ci},'${team}',${pi},this.value)"
-          style="padding:3px 6px;border-radius:8px;border:1px solid var(--border);font-size:12px;background:${team==='A'?'var(--green-pale)':'var(--blue-pale)'};color:var(--text);cursor:pointer;max-width:130px;">
-          ${attendees.map(p=>`<option value="${p.id}" ${p.id===player.id?'selected':''}>${p.name} (${levelLabel(p.level)})</option>`).join('')}
-        </select>`;
+      const makePlayerChip = (player, team, pi) => {
+        const cls = player.gender === 'M' ? 'male' : 'female';
+        const bg = team==='A' ? 'var(--green)' : 'var(--blue)';
+        const selectId = `sel-${ri}-${ci}-${team}-${pi}`;
+        const chipId = `chip-${ri}-${ci}-${team}-${pi}`;
+        return `
+          <div style="position:relative;display:inline-block;">
+            <span id="${chipId}" class="player-chip ${cls}"
+              style="background:${bg};color:white;cursor:pointer;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600;"
+              onclick="togglePlayerSelect('${selectId}','${chipId}')">
+              ${player.name} <span style="opacity:0.7;font-size:10px;">${levelLabel(player.level)}</span> ✎
+            </span>
+            <select id="${selectId}"
+              style="display:none;position:absolute;top:110%;left:0;z-index:100;padding:4px 8px;border-radius:8px;border:1px solid var(--border);font-size:12px;background:white;box-shadow:0 4px 12px rgba(0,0,0,0.15);min-width:140px;"
+              onchange="swapPlayer(${ri},${ci},'${team}',${pi},this.value);this.style.display='none';">
+              ${attendees.map(p=>`<option value="${p.id}" ${p.id===player.id?'selected':''}>${p.name} (${levelLabel(p.level)})</option>`).join('')}
+            </select>
+          </div>`;
+      };
       html += `
         <div class="court-card">
           <div class="court-header">
@@ -1454,12 +1468,12 @@ function renderBracket(data) {
           </div>
           <div class="team">
             <div class="team-label">팀 A · Avg L${avgA}</div>
-            <div class="team-players" style="gap:4px;">${game.teamA.map((p,pi)=>makeSelect(p,'A',pi)).join('')}</div>
+            <div class="team-players" style="gap:6px;flex-wrap:wrap;">${game.teamA.map((p,pi)=>makePlayerChip(p,'A',pi)).join('')}</div>
           </div>
           <div class="vs-divider">VS</div>
           <div class="team">
             <div class="team-label">팀 B · Avg L${avgB}</div>
-            <div class="team-players" style="gap:4px;">${game.teamB.map((p,pi)=>makeSelect(p,'B',pi)).join('')}</div>
+            <div class="team-players" style="gap:6px;flex-wrap:wrap;">${game.teamB.map((p,pi)=>makePlayerChip(p,'B',pi)).join('')}</div>
           </div>
         </div>
       `;
@@ -1778,6 +1792,22 @@ async function deleteHistory(hi) {
   renderHistory();
   renderRanking();
 }
+
+function togglePlayerSelect(selectId, chipId) {
+  // 다른 드롭다운 모두 닫기
+  document.querySelectorAll('[id^="sel-"]').forEach(el => {
+    if (el.id !== selectId) el.style.display = 'none';
+  });
+  const sel = document.getElementById(selectId);
+  sel.style.display = sel.style.display === 'none' ? 'block' : 'none';
+}
+
+// 외부 클릭 시 드롭다운 닫기
+document.addEventListener('click', e => {
+  if (!e.target.closest('[id^="chip-"]') && !e.target.closest('[id^="sel-"]')) {
+    document.querySelectorAll('[id^="sel-"]').forEach(el => el.style.display = 'none');
+  }
+});
 
 // ========== 대진표 선수 교체 ==========
 function swapPlayer(ri, ci, team, pi, newId) {
