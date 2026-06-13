@@ -1578,7 +1578,7 @@ function saveBracketPDF() {
     `;
 
     let html = `
-      <div class="pdf-card" style="background:#1a6b3c;color:white;padding:16px;border-radius:8px;text-align:center;margin-bottom:20px;">
+      <div class="pdf-section" style="background:#1a6b3c;color:white;padding:16px;border-radius:8px;text-align:center;margin-bottom:20px;">
         <div style="font-size:22px;font-weight:700;margin-bottom:6px;">🎾 TeamKen Tennis League</div>
         <div style="font-size:13px;opacity:0.9;">${dateStr} (${dayStr}) &nbsp;|&nbsp; ${attendees.length}명 참가 &nbsp;(남 ${males} / 여 ${females})</div>
       </div>
@@ -1586,7 +1586,7 @@ function saveBracketPDF() {
 
     bracket.forEach(round => {
       html += `
-        <div class="pdf-card" style="background:#e8f5ee;border-left:4px solid #1a6b3c;padding:8px 14px;margin-bottom:14px;border-radius:4px;page-break-after:avoid;break-after:avoid;">
+        <div class="pdf-section" style="background:#e8f5ee;border-left:4px solid #1a6b3c;padding:8px 14px;margin-bottom:14px;border-radius:4px;page-break-after:avoid;break-after:avoid;">
           <span style="font-size:15px;font-weight:700;color:#1a6b3c;">${round.round}라운드</span>
         </div>
       `;
@@ -1597,7 +1597,7 @@ function saveBracketPDF() {
         const teamBNames = game.teamB.map(p=>p.name).join('  ·  ');
 
         html += `
-          <div class="pdf-card" style="border:1px solid #ddd;border-radius:8px;overflow:hidden;margin-bottom:12px;page-break-inside:avoid;break-inside:avoid;">
+          <div class="pdf-section" style="border:1px solid #ddd;border-radius:8px;overflow:hidden;margin-bottom:12px;page-break-inside:avoid;break-inside:avoid;">
             <!-- 코트 헤더 -->
             <div style="background:#333;color:white;padding:6px 14px;display:flex;justify-content:space-between;align-items:center;">
               <span style="font-size:13px;font-weight:700;">${gi+1}코트</span>
@@ -1650,7 +1650,7 @@ function saveBracketPDF() {
       // 휴식자
       if (round.resting && round.resting.length > 0) {
         html += `
-          <div class="pdf-card" style="background:#fff8e6;border:1px solid #f5d97a;border-radius:6px;padding:8px 14px;margin-bottom:14px;font-size:13px;color:#8a6000;">
+          <div class="pdf-section" style="background:#fff8e6;border:1px solid #f5d97a;border-radius:6px;padding:8px 14px;margin-bottom:14px;font-size:13px;color:#8a6000;">
             🪑 <strong>휴식:</strong> ${round.resting.map(p=>p.name).join('  /  ')}
           </div>
         `;
@@ -1669,84 +1669,51 @@ function saveBracketPDF() {
     setTimeout(async () => {
       try {
         const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: 'a4' });
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
         const pageW = pdf.internal.pageSize.getWidth();
         const pageH = pdf.internal.pageSize.getHeight();
-        const margin = 20;
+        const margin = 10;
         const contentW = pageW - margin * 2;
-        const contentH = pageH - margin * 2;
 
-        // 카드 위치를 캡처 전에 미리 측정
-        const cardEls = Array.from(container.querySelectorAll('.pdf-card'));
-        const cardRects = cardEls.map(el => ({
-          top: el.offsetTop,
-          height: el.offsetHeight
-        }));
+        // 타이틀 + 각 라운드 섹션을 개별 div로 분리해서 캡처
+        const sections = Array.from(container.querySelectorAll('.pdf-section'));
 
-        // 전체 캡처
-        const fullCanvas = await html2canvas(container, {
-          backgroundColor: '#ffffff',
-          scale: 2,
-          useCORS: true,
-          logging: false,
-        });
-        document.body.removeChild(container);
+        let currentY = margin;
+        let isFirstPage = true;
 
-        const scale = contentW / fullCanvas.width;
+        for (let i = 0; i < sections.length; i++) {
+          const section = sections[i];
+          const sectionCanvas = await html2canvas(section, {
+            backgroundColor: '#ffffff',
+            scale: 2,
+            useCORS: true,
+            logging: false,
+          });
 
-        if (!cardRects.length) {
-          // 카드 없으면 단순 분할
-          const sliceH = Math.floor(contentH / scale);
-          let yPos = 0;
-          let first = true;
-          while (yPos < fullCanvas.height) {
-            if (!first) pdf.addPage();
-            first = false;
-            const h = Math.min(sliceH, fullCanvas.height - yPos);
-            const sc = document.createElement('canvas');
-            sc.width = fullCanvas.width;
-            sc.height = h;
-            const ctx = sc.getContext('2d');
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, sc.width, sc.height);
-            ctx.drawImage(fullCanvas, 0, -yPos);
-            pdf.addImage(sc.toDataURL('image/png'), 'PNG', margin, margin, contentW, h * scale);
-            yPos += sliceH;
+          const sectionW = contentW;
+          const sectionH = (sectionCanvas.height / sectionCanvas.width) * sectionW;
+
+          // 현재 페이지에 안 들어오면 새 페이지
+          if (!isFirstPage && currentY + sectionH > pageH - margin) {
+            pdf.addPage();
+            currentY = margin;
           }
-        } else {
-          // 카드 단위로 페이지 배치
-          let currentPageY = margin;
-          let first = true;
 
-          for (const rect of cardRects) {
-            const cardTop = rect.top * 2;      // scale=2
-            const cardH = rect.height * 2;
-            const cardRenderedH = cardH * scale;
-
-            if (!first && currentPageY + cardRenderedH > pageH - margin) {
-              pdf.addPage();
-              currentPageY = margin;
-            }
-            first = false;
-
-            const sc = document.createElement('canvas');
-            sc.width = fullCanvas.width;
-            sc.height = Math.ceil(cardH);
-            const ctx = sc.getContext('2d');
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, sc.width, sc.height);
-            ctx.drawImage(fullCanvas, 0, -cardTop);
-            pdf.addImage(sc.toDataURL('image/png'), 'PNG', margin, currentPageY, contentW, cardRenderedH);
-            currentPageY += cardRenderedH + 6;
-          }
+          pdf.addImage(
+            sectionCanvas.toDataURL('image/png'),
+            'PNG', margin, currentY, sectionW, sectionH
+          );
+          currentY += sectionH + 4;
+          isFirstPage = false;
         }
 
+        document.body.removeChild(container);
         const fileName = `팀켄테니스_대진표_${dateStr.replace(/\./g,'')}.pdf`;
         pdf.save(fileName);
         showToast('✅ PDF 저장됐어요!');
       } catch(e) {
         if (document.body.contains(container)) document.body.removeChild(container);
-        console.warn(e);
+        console.warn('PDF 오류:', e);
         showToast('PDF 생성 실패: ' + e.message);
       }
     }, 500);
