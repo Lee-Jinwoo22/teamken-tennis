@@ -1516,76 +1516,199 @@ function renderBracket(data) {
 }
 
 function saveBracketPDF() {
-  const el = document.getElementById('bracket-result');
-  if (!el || !el.innerHTML) { alert('먼저 대진표를 생성해주세요'); return; }
+  if (!currentBracket) { alert('먼저 대진표를 생성해주세요'); return; }
   showToast('PDF 생성 중...');
 
-  const loadLibs = () => {
-    return new Promise((resolve) => {
-      if (window.html2canvas && window.jspdf) { resolve(); return; }
-      const s1 = document.createElement('script');
-      s1.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-      s1.onload = () => {
-        const s2 = document.createElement('script');
-        s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-        s2.onload = resolve;
-        document.head.appendChild(s2);
-      };
-      document.head.appendChild(s1);
-    });
-  };
+  const loadJsPDF = () => new Promise(resolve => {
+    if (window.jspdf) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload = resolve;
+    document.head.appendChild(s);
+  });
 
-  loadLibs().then(() => {
-    html2canvas(el, {
-      backgroundColor: '#ffffff',
-      scale: 2,
-      useCORS: true,
-    }).then(canvas => {
-      const { jsPDF } = window.jspdf;
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
-        unit: 'mm',
-        format: 'a4'
+  loadJsPDF().then(() => {
+    const { jsPDF } = window.jspdf;
+    const { bracket, attendees } = currentBracket;
+    const d = new Date();
+    const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+    const days = ['일','월','화','수','목','금','토'];
+    const dayStr = days[d.getDay()];
+    const males = attendees.filter(p=>p.gender==='M').length;
+    const females = attendees.filter(p=>p.gender==='F').length;
+
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const W = pdf.internal.pageSize.getWidth();
+    const H = pdf.internal.pageSize.getHeight();
+    const margin = 15;
+    let y = margin;
+
+    const GREEN = [26, 107, 60];
+    const GREEN_LIGHT = [232, 245, 238];
+    const BLUE = [37, 99, 170];
+    const BLUE_LIGHT = [232, 240, 251];
+    const GRAY = [247, 249, 247];
+    const BORDER = [208, 232, 216];
+    const TEXT = [26, 46, 34];
+    const MUTED = [90, 122, 101];
+    const WHITE = [255, 255, 255];
+    const AMBER = [240, 165, 0];
+
+    const checkPage = (needed) => {
+      if (y + needed > H - margin) {
+        pdf.addPage();
+        y = margin;
+        drawPageHeader();
+      }
+    };
+
+    const drawPageHeader = () => {
+      pdf.setFillColor(...GREEN);
+      pdf.rect(0, 0, W, 12, 'F');
+      pdf.setTextColor(...WHITE);
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('TEAMKEN TENNIS LEAGUE', margin, 8);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`${dateStr} (${dayStr})`, W - margin, 8, { align: 'right' });
+      y = Math.max(y, 18);
+    };
+
+    // ── 타이틀 박스
+    pdf.setFillColor(...GREEN);
+    pdf.roundedRect(margin, y, W - margin*2, 22, 3, 3, 'F');
+    pdf.setTextColor(...WHITE);
+    pdf.setFontSize(18);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('TeamKen Tennis League', W/2, y+9, { align: 'center' });
+    pdf.setFontSize(11);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`${dateStr} (${dayStr})  |  ${attendees.length}명 참가  (남 ${males} / 여 ${females})`, W/2, y+17, { align: 'center' });
+    y += 28;
+
+    bracket.forEach((round, ri) => {
+      checkPage(20);
+
+      // ── 라운드 헤더
+      pdf.setFillColor(...AMBER);
+      pdf.roundedRect(margin, y, W - margin*2, 10, 2, 2, 'F');
+      pdf.setTextColor(26, 46, 34);
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(`${round.round} 라운드`, W/2, y+7, { align: 'center' });
+      y += 14;
+
+      const games = round.games;
+      const cols = games.length >= 3 ? 2 : 1;
+      const colW = (W - margin*2 - (cols-1)*6) / cols;
+
+      games.forEach((game, gi) => {
+        const col = gi % cols;
+        const x = margin + col * (colW + 6);
+        if (col === 0 && gi > 0) checkPage(42);
+
+        const isHard = game.genderLabel === '남성' || game.genderLabel === '';
+        const cardBg = game.genderLabel === '여성' ? [255,240,248] : game.genderLabel === '혼합' ? [255,252,240] : BLUE_LIGHT;
+        const headerBg = game.genderLabel === '여성' ? [192,80,154] : game.genderLabel === '혼합' ? [180,130,0] : BLUE;
+
+        // 코트 카드 배경
+        pdf.setFillColor(...cardBg);
+        pdf.roundedRect(x, y, colW, 38, 2, 2, 'F');
+        pdf.setDrawColor(...BORDER);
+        pdf.setLineWidth(0.3);
+        pdf.roundedRect(x, y, colW, 38, 2, 2, 'S');
+
+        // 코트 헤더
+        pdf.setFillColor(...headerBg);
+        pdf.roundedRect(x, y, colW, 8, 2, 2, 'F');
+        pdf.rect(x, y+4, colW, 4, 'F');
+        pdf.setTextColor(...WHITE);
+        pdf.setFontSize(9);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(`${gi+1}코트`, x+4, y+5.5);
+        if (game.genderLabel) {
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(8);
+          pdf.text(game.genderLabel, x+colW-4, y+5.5, { align: 'right' });
+        }
+
+        // 팀A
+        pdf.setTextColor(...TEXT);
+        pdf.setFontSize(7.5);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('팀 A', x+4, y+14);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(10);
+        pdf.setTextColor(...GREEN);
+        const teamAStr = game.teamA.map(p=>p.name).join('  ·  ');
+        pdf.text(teamAStr, x+colW/2, y+14, { align: 'center' });
+
+        // VS
+        pdf.setTextColor(...MUTED);
+        pdf.setFontSize(8);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('VS', x+colW/2, y+21, { align: 'center' });
+        pdf.setDrawColor(...BORDER);
+        pdf.setLineWidth(0.2);
+        pdf.line(x+8, y+21.5, x+colW/2-5, y+21.5);
+        pdf.line(x+colW/2+5, y+21.5, x+colW-8, y+21.5);
+
+        // 팀B
+        pdf.setTextColor(...TEXT);
+        pdf.setFontSize(7.5);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('팀 B', x+4, y+28);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(10);
+        pdf.setTextColor(37, 99, 170);
+        const teamBStr = game.teamB.map(p=>p.name).join('  ·  ');
+        pdf.text(teamBStr, x+colW/2, y+28, { align: 'center' });
+
+        // 레벨 평균
+        const avgA = (game.teamA.reduce((s,p)=>s+p.level,0)/game.teamA.length).toFixed(1);
+        const avgB = (game.teamB.reduce((s,p)=>s+p.level,0)/game.teamB.length).toFixed(1);
+        pdf.setTextColor(...MUTED);
+        pdf.setFontSize(7);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(`Avg L${avgA}`, x+4, y+35);
+        pdf.text(`Avg L${avgB}`, x+4, y+35);
+
+        if (col === cols-1 || gi === games.length-1) y += 42;
       });
 
-      const pageW = pdf.internal.pageSize.getWidth();
-      const pageH = pdf.internal.pageSize.getHeight();
-      const margin = 10;
-      const imgW = pageW - margin * 2;
-      const imgH = (canvas.height * imgW) / canvas.width;
+      // 홀수 게임 처리 (마지막 게임이 단독인 경우)
+      if (cols === 2 && games.length % 2 === 1) y += 0;
 
-      const d = new Date();
-      const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
-
-      // 타이틀
-      pdf.setFontSize(14);
-      pdf.setTextColor(26, 107, 60);
-      pdf.text(`팀켄테니스 대진표 · ${dateStr}`, margin, margin - 2);
-
-      // 이미지가 한 페이지에 들어오면 그대로, 넘으면 페이지 분할
-      if (imgH <= pageH - margin * 2) {
-        pdf.addImage(imgData, 'PNG', margin, margin + 2, imgW, imgH);
-      } else {
-        // 페이지 분할
-        let yPos = 0;
-        const pageImgH = pageH - margin * 2;
-        while (yPos < canvas.height) {
-          if (yPos > 0) pdf.addPage();
-          const sliceH = Math.min(pageImgH * canvas.width / imgW, canvas.height - yPos);
-          const sliceCanvas = document.createElement('canvas');
-          sliceCanvas.width = canvas.width;
-          sliceCanvas.height = sliceH;
-          sliceCanvas.getContext('2d').drawImage(canvas, 0, -yPos);
-          pdf.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', margin, margin, imgW, sliceH * imgW / canvas.width);
-          yPos += sliceH;
-        }
+      // 휴식자
+      if (round.resting && round.resting.length > 0) {
+        checkPage(10);
+        pdf.setFillColor(255, 248, 230);
+        pdf.roundedRect(margin, y, W-margin*2, 9, 2, 2, 'F');
+        pdf.setDrawColor(245, 217, 122);
+        pdf.roundedRect(margin, y, W-margin*2, 9, 2, 2, 'S');
+        pdf.setTextColor(138, 96, 0);
+        pdf.setFontSize(8.5);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('🪑 휴식', margin+4, y+6);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(round.resting.map(p=>p.name).join('  ·  '), margin+22, y+6);
+        y += 13;
       }
 
-      const fileName = `팀켄테니스_대진표_${dateStr.replace(/\./g,'')}.pdf`;
-      pdf.save(fileName);
-      showToast('✅ PDF 저장됐어요! 출력하거나 공유하세요');
+      y += 4;
     });
+
+    // 푸터
+    pdf.setFillColor(...GREEN);
+    pdf.rect(0, H-10, W, 10, 'F');
+    pdf.setTextColor(...WHITE);
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('⚡ TeamKen Tennis League', W/2, H-4, { align: 'center' });
+
+    const fileName = `팀켄테니스_대진표_${dateStr.replace(/\./g,'')}.pdf`;
+    pdf.save(fileName);
+    showToast('✅ PDF 저장됐어요!');
   });
 }
 
