@@ -1676,7 +1676,14 @@ function saveBracketPDF() {
         const contentW = pageW - margin * 2;
         const contentH = pageH - margin * 2;
 
-        // 전체 컨테이너 캡처
+        // 카드 위치를 캡처 전에 미리 측정
+        const cardEls = Array.from(container.querySelectorAll('.pdf-card'));
+        const cardRects = cardEls.map(el => ({
+          top: el.offsetTop,
+          height: el.offsetHeight
+        }));
+
+        // 전체 캡처
         const fullCanvas = await html2canvas(container, {
           backgroundColor: '#ffffff',
           scale: 2,
@@ -1687,12 +1694,10 @@ function saveBracketPDF() {
 
         const scale = contentW / fullCanvas.width;
 
-        // 각 경기 카드 요소의 offsetTop/offsetHeight 수집
-        const cards = Array.from(container.querySelectorAll('.pdf-card'));
-        // 카드 정보가 없으면 단순 분할
-        if (!cards.length) {
+        if (!cardRects.length) {
+          // 카드 없으면 단순 분할
+          const sliceH = Math.floor(contentH / scale);
           let yPos = 0;
-          const sliceH = contentH / scale;
           let first = true;
           while (yPos < fullCanvas.height) {
             if (!first) pdf.addPage();
@@ -1711,16 +1716,14 @@ function saveBracketPDF() {
         } else {
           // 카드 단위로 페이지 배치
           let currentPageY = margin;
-          let sourceY = 0;
           let first = true;
 
-          for (const card of cards) {
-            const cardTop = card.offsetTop * 2; // scale=2
-            const cardH = card.offsetHeight * 2;
+          for (const rect of cardRects) {
+            const cardTop = rect.top * 2;      // scale=2
+            const cardH = rect.height * 2;
             const cardRenderedH = cardH * scale;
 
             if (!first && currentPageY + cardRenderedH > pageH - margin) {
-              // 이 카드가 현재 페이지에 안 들어오면 새 페이지
               pdf.addPage();
               currentPageY = margin;
             }
@@ -1728,13 +1731,13 @@ function saveBracketPDF() {
 
             const sc = document.createElement('canvas');
             sc.width = fullCanvas.width;
-            sc.height = cardH;
+            sc.height = Math.ceil(cardH);
             const ctx = sc.getContext('2d');
             ctx.fillStyle = 'white';
             ctx.fillRect(0, 0, sc.width, sc.height);
             ctx.drawImage(fullCanvas, 0, -cardTop);
             pdf.addImage(sc.toDataURL('image/png'), 'PNG', margin, currentPageY, contentW, cardRenderedH);
-            currentPageY += cardRenderedH + 4;
+            currentPageY += cardRenderedH + 6;
           }
         }
 
@@ -1744,7 +1747,7 @@ function saveBracketPDF() {
       } catch(e) {
         if (document.body.contains(container)) document.body.removeChild(container);
         console.warn(e);
-        showToast('PDF 생성 실패');
+        showToast('PDF 생성 실패: ' + e.message);
       }
     }, 500);
   });
