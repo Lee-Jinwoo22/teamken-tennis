@@ -1657,8 +1657,42 @@ function saveBracketPDF() {
       }
     });
 
+    // 경기 횟수 요약
+    const counts = {};
+    attendees.forEach(p => counts[p.name] = 0);
+    bracket.forEach(round => {
+      round.games.forEach(game => {
+        [...game.teamA, ...game.teamB].forEach(p => {
+          counts[p.name] = (counts[p.name] || 0) + 1;
+        });
+      });
+    });
+    const countEntries = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+    const maxC = Math.max(...Object.values(counts));
+    const minC = Math.min(...Object.values(counts));
+
     html += `
-      <div style="margin-top:24px;padding-top:12px;border-top:1px solid #eee;text-align:center;font-size:11px;color:#aaa;">
+      <div class="pdf-section" style="background:#f7f9f7;border:1px solid #d0e8d8;border-radius:8px;padding:14px;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:#1a6b3c;margin-bottom:10px;">경기 횟수 요약</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          ${countEntries.map(([name, cnt]) => {
+            const isMax = cnt === maxC && maxC !== minC;
+            const isMin = cnt === minC && maxC !== minC;
+            return `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:12px;font-size:12px;
+              background:${isMax?'#e8f0fb':isMin?'#e8f5ee':'white'};
+              border:1px solid ${isMax?'#b3cef0':isMin?'#c5e8d4':'#ddd'};">
+              ${name} <strong style="color:${isMax?'#2563aa':isMin?'#1a6b3c':'#555'}">${cnt}회</strong>
+            </span>`;
+          }).join('')}
+        </div>
+        ${maxC !== minC
+          ? `<div style="font-size:10px;color:#aaa;margin-top:8px;">🔵 최다 · 🟢 최소</div>`
+          : `<div style="font-size:10px;color:#1a6b3c;margin-top:8px;">✅ 모든 참가자 경기 횟수 균등</div>`}
+      </div>
+    `;
+
+    html += `
+      <div class="pdf-section" style="margin-top:8px;padding-top:12px;border-top:1px solid #eee;text-align:center;font-size:11px;color:#aaa;">
         TeamKen Tennis League · ${dateStr}
       </div>
     `;
