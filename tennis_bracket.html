@@ -1821,7 +1821,29 @@ function copyBracketText() {
     }
   });
 
-  text += `\n${'━'.repeat(20)}`;
+  // 경기 횟수 요약
+  const counts = {};
+  attendees.forEach(p => counts[p.name] = 0);
+  bracket.forEach(round => {
+    round.games.forEach(game => {
+      [...game.teamA, ...game.teamB].forEach(p => {
+        counts[p.name] = (counts[p.name] || 0) + 1;
+      });
+    });
+  });
+  const maxC = Math.max(...Object.values(counts));
+  const minC = Math.min(...Object.values(counts));
+
+  text += `\n${'━'.repeat(20)}\n`;
+  text += `📊 경기 횟수 요약\n`;
+  Object.entries(counts).sort((a,b) => b[1]-a[1]).forEach(([name, cnt]) => {
+    const mark = cnt===maxC && maxC!==minC ? '🔵' : cnt===minC && maxC!==minC ? '🟢' : '　';
+    text += `${mark} ${name} · ${cnt}회\n`;
+  });
+  if (maxC === minC) text += `✅ 모든 참가자 경기 횟수 균등\n`;
+  else text += `🔵 최다 · 🟢 최소\n`;
+
+  text += `${'━'.repeat(20)}`;
 
   navigator.clipboard.writeText(text).then(() => {
     showToast('📋 복사됐어요! 카톡에 붙여넣기 하세요');
