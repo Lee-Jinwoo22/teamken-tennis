@@ -1543,6 +1543,178 @@ function saveBracketPDF() {
   closePDFDatePicker();
   showToast('PDF 생성 중...');
 
+  const loadLibs = () => new Promise(resolve => {
+    if (window.html2canvas && window.jspdf) { resolve(); return; }
+    const s1 = document.createElement('script');
+    s1.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s1.onload = () => {
+      const s2 = document.createElement('script');
+      s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      s2.onload = resolve;
+      document.head.appendChild(s2);
+    };
+    document.head.appendChild(s1);
+  });
+
+  loadLibs().then(() => {
+    const { bracket, attendees } = currentBracket;
+    const dateVal = document.getElementById('pdf-date-input').value;
+    const d = dateVal ? new Date(dateVal) : new Date();
+    const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+    const days = ['일','월','화','수','목','금','토'];
+    const dayStr = days[d.getDay()];
+    const males = attendees.filter(p=>p.gender==='M').length;
+    const females = attendees.filter(p=>p.gender==='F').length;
+
+    // PDF 전용 HTML 생성
+    const container = document.createElement('div');
+    container.style.cssText = `
+      position:fixed; left:-9999px; top:0;
+      width:794px; background:white;
+      font-family:'Noto Sans KR',sans-serif;
+      padding:24px; box-sizing:border-box;
+    `;
+
+    let html = `
+      <div style="background:#1a6b3c;color:white;padding:16px;border-radius:8px;text-align:center;margin-bottom:20px;">
+        <div style="font-size:22px;font-weight:700;margin-bottom:6px;">🎾 TeamKen Tennis League</div>
+        <div style="font-size:13px;opacity:0.9;">${dateStr} (${dayStr}) &nbsp;|&nbsp; ${attendees.length}명 참가 &nbsp;(남 ${males} / 여 ${females})</div>
+      </div>
+    `;
+
+    bracket.forEach(round => {
+      html += `
+        <div style="background:#e8f5ee;border-left:4px solid #1a6b3c;padding:8px 14px;margin-bottom:14px;border-radius:4px;">
+          <span style="font-size:15px;font-weight:700;color:#1a6b3c;">${round.round}라운드</span>
+        </div>
+      `;
+
+      round.games.forEach((game, gi) => {
+        const genderColor = game.genderLabel==='여성' ? '#c0509a' : game.genderLabel==='혼합' ? '#8a6000' : '#2563aa';
+        const teamANames = game.teamA.map(p=>p.name).join('  ·  ');
+        const teamBNames = game.teamB.map(p=>p.name).join('  ·  ');
+
+        html += `
+          <div style="border:1px solid #ddd;border-radius:8px;overflow:hidden;margin-bottom:12px;">
+            <!-- 코트 헤더 -->
+            <div style="background:#333;color:white;padding:6px 14px;display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:13px;font-weight:700;">${gi+1}코트</span>
+              <span style="font-size:11px;color:rgba(255,255,255,0.8);">${game.genderLabel||''}</span>
+            </div>
+            <!-- 팀A -->
+            <div style="display:flex;align-items:stretch;border-bottom:1px solid #eee;">
+              <div style="background:#e8f5ee;color:#1a6b3c;font-weight:700;font-size:12px;padding:12px 10px;display:flex;align-items:center;min-width:36px;justify-content:center;">팀A</div>
+              <div style="flex:1;padding:12px 16px;font-size:15px;font-weight:700;color:#1a2e22;display:flex;align-items:center;">${teamANames}</div>
+              <div style="border-left:1px solid #eee;padding:12px 16px;min-width:80px;display:flex;align-items:center;justify-content:center;">
+                <span style="font-size:11px;color:#aaa;border-bottom:1px solid #ccc;min-width:60px;text-align:center;padding-bottom:2px;">스코어</span>
+              </div>
+              <div style="border-left:1px solid #eee;padding:12px 16px;display:flex;align-items:center;gap:14px;min-width:160px;">
+                <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:#555;">
+                  <span style="display:inline-block;width:14px;height:14px;border:1.5px solid #aaa;border-radius:3px;"></span>승
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:#555;">
+                  <span style="display:inline-block;width:14px;height:14px;border:1.5px solid #aaa;border-radius:3px;"></span>패
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:#555;">
+                  <span style="display:inline-block;width:14px;height:14px;border:1.5px solid #aaa;border-radius:3px;"></span>무
+                </label>
+              </div>
+            </div>
+            <!-- VS -->
+            <div style="text-align:center;padding:4px;background:#fafafa;color:#aaa;font-size:11px;font-weight:700;border-bottom:1px solid #eee;">VS</div>
+            <!-- 팀B -->
+            <div style="display:flex;align-items:stretch;">
+              <div style="background:#e8f0fb;color:#2563aa;font-weight:700;font-size:12px;padding:12px 10px;display:flex;align-items:center;min-width:36px;justify-content:center;">팀B</div>
+              <div style="flex:1;padding:12px 16px;font-size:15px;font-weight:700;color:#1a2e22;display:flex;align-items:center;">${teamBNames}</div>
+              <div style="border-left:1px solid #eee;padding:12px 16px;min-width:80px;display:flex;align-items:center;justify-content:center;">
+                <span style="font-size:11px;color:#aaa;border-bottom:1px solid #ccc;min-width:60px;text-align:center;padding-bottom:2px;">스코어</span>
+              </div>
+              <div style="border-left:1px solid #eee;padding:12px 16px;display:flex;align-items:center;gap:14px;min-width:160px;">
+                <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:#555;">
+                  <span style="display:inline-block;width:14px;height:14px;border:1.5px solid #aaa;border-radius:3px;"></span>승
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:#555;">
+                  <span style="display:inline-block;width:14px;height:14px;border:1.5px solid #aaa;border-radius:3px;"></span>패
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:#555;">
+                  <span style="display:inline-block;width:14px;height:14px;border:1.5px solid #aaa;border-radius:3px;"></span>무
+                </label>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      // 휴식자
+      if (round.resting && round.resting.length > 0) {
+        html += `
+          <div style="background:#fff8e6;border:1px solid #f5d97a;border-radius:6px;padding:8px 14px;margin-bottom:14px;font-size:13px;color:#8a6000;">
+            🪑 <strong>휴식:</strong> ${round.resting.map(p=>p.name).join('  /  ')}
+          </div>
+        `;
+      }
+    });
+
+    html += `
+      <div style="margin-top:24px;padding-top:12px;border-top:1px solid #eee;text-align:center;font-size:11px;color:#aaa;">
+        TeamKen Tennis League · ${dateStr}
+      </div>
+    `;
+
+    container.innerHTML = html;
+    document.body.appendChild(container);
+
+    setTimeout(() => {
+      html2canvas(container, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      }).then(canvas => {
+        document.body.removeChild(container);
+        const { jsPDF } = window.jspdf;
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const pageW = pdf.internal.pageSize.getWidth();
+        const pageH = pdf.internal.pageSize.getHeight();
+        const margin = 8;
+        const imgW = pageW - margin * 2;
+        const imgH = (canvas.height * imgW) / canvas.width;
+
+        if (imgH <= pageH - margin * 2) {
+          pdf.addImage(imgData, 'PNG', margin, margin, imgW, imgH);
+        } else {
+          // 페이지 분할
+          const pageImgH = (pageH - margin * 2) * canvas.width / imgW;
+          let yPos = 0;
+          while (yPos < canvas.height) {
+            if (yPos > 0) pdf.addPage();
+            const sliceH = Math.min(pageImgH, canvas.height - yPos);
+            const sliceCanvas = document.createElement('canvas');
+            sliceCanvas.width = canvas.width;
+            sliceCanvas.height = sliceH;
+            const ctx = sliceCanvas.getContext('2d');
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+            ctx.drawImage(canvas, 0, -yPos);
+            const sliceImgH = sliceH * imgW / canvas.width;
+            pdf.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', margin, margin, imgW, sliceImgH);
+            yPos += sliceH;
+          }
+        }
+
+        const fileName = `팀켄테니스_대진표_${dateStr.replace(/\./g,'')}.pdf`;
+        pdf.save(fileName);
+        showToast('✅ PDF 저장됐어요!');
+      }).catch(e => {
+        document.body.removeChild(container);
+        console.warn(e);
+        showToast('PDF 생성 실패');
+      });
+    }, 500);
+  });
+}
+
   const loadJsPDF = () => new Promise(resolve => {
     if (window.jspdf) { resolve(); return; }
     const s = document.createElement('script');
