@@ -1573,6 +1573,8 @@ function saveBracketPDF() {
       width:794px; background:white;
       font-family:'Noto Sans KR',sans-serif;
       padding:24px; box-sizing:border-box;
+      -webkit-print-color-adjust:exact;
+      print-color-adjust:exact;
     `;
 
     let html = `
@@ -1584,7 +1586,7 @@ function saveBracketPDF() {
 
     bracket.forEach(round => {
       html += `
-        <div style="background:#e8f5ee;border-left:4px solid #1a6b3c;padding:8px 14px;margin-bottom:14px;border-radius:4px;">
+        <div style="background:#e8f5ee;border-left:4px solid #1a6b3c;padding:8px 14px;margin-bottom:14px;border-radius:4px;page-break-after:avoid;break-after:avoid;">
           <span style="font-size:15px;font-weight:700;color:#1a6b3c;">${round.round}라운드</span>
         </div>
       `;
@@ -1595,7 +1597,7 @@ function saveBracketPDF() {
         const teamBNames = game.teamB.map(p=>p.name).join('  ·  ');
 
         html += `
-          <div style="border:1px solid #ddd;border-radius:8px;overflow:hidden;margin-bottom:12px;">
+          <div style="border:1px solid #ddd;border-radius:8px;overflow:hidden;margin-bottom:12px;page-break-inside:avoid;break-inside:avoid;">
             <!-- 코트 헤더 -->
             <div style="background:#333;color:white;padding:6px 14px;display:flex;justify-content:space-between;align-items:center;">
               <span style="font-size:13px;font-weight:700;">${gi+1}코트</span>
@@ -1673,31 +1675,38 @@ function saveBracketPDF() {
       }).then(canvas => {
         document.body.removeChild(container);
         const { jsPDF } = window.jspdf;
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: 'a4' });
         const pageW = pdf.internal.pageSize.getWidth();
         const pageH = pdf.internal.pageSize.getHeight();
-        const margin = 8;
+        const margin = 20;
         const imgW = pageW - margin * 2;
-        const imgH = (canvas.height * imgW) / canvas.width;
+        const scale = imgW / canvas.width;
+        const imgH = canvas.height * scale;
+        const pageContentH = pageH - margin * 2;
 
-        if (imgH <= pageH - margin * 2) {
-          pdf.addImage(imgData, 'PNG', margin, margin, imgW, imgH);
+        if (imgH <= pageContentH) {
+          // 한 페이지에 들어오면 그대로
+          pdf.addImage(canvas.toDataURL('image/png'), 'PNG', margin, margin, imgW, imgH);
         } else {
-          // 페이지 분할
-          const pageImgH = (pageH - margin * 2) * canvas.width / imgW;
+          // 경기 카드 단위로 페이지 분할
+          const cards = container.querySelectorAll('[data-card]');
+          let currentY = margin;
+          let sourceY = 0;
+
+          // 카드가 없으면 일반 분할
+          const sliceH = pageContentH / scale;
           let yPos = 0;
           while (yPos < canvas.height) {
             if (yPos > 0) pdf.addPage();
-            const sliceH = Math.min(pageImgH, canvas.height - yPos);
             const sliceCanvas = document.createElement('canvas');
             sliceCanvas.width = canvas.width;
-            sliceCanvas.height = sliceH;
+            const remainH = canvas.height - yPos;
+            sliceCanvas.height = Math.min(sliceH, remainH);
             const ctx = sliceCanvas.getContext('2d');
             ctx.fillStyle = 'white';
             ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
             ctx.drawImage(canvas, 0, -yPos);
-            const sliceImgH = sliceH * imgW / canvas.width;
+            const sliceImgH = sliceCanvas.height * scale;
             pdf.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', margin, margin, imgW, sliceImgH);
             yPos += sliceH;
           }
