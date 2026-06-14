@@ -3576,12 +3576,21 @@ async function deleteDateSchedule(date) {
 // ========== NAV ==========
 function showPage(id) {
   currentPageId = id;
-  // 탭 이동을 히스토리에 쌓기 (뒤로가기 가능하게)
   history.pushState({ page: id }, '', '');
+  _activatePage(id);
+}
+
+function _activatePage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-' + id).classList.add('active');
-  event.target.classList.add('active');
+  const pageEl = document.getElementById('page-' + id);
+  if (pageEl) pageEl.classList.add('active');
+  // 해당 탭 버튼 활성화
+  document.querySelectorAll('nav button').forEach(b => {
+    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(`'${id}'`)) {
+      b.classList.add('active');
+    }
+  });
   if (id === 'history') renderHistory();
   if (id === 'ranking') renderRanking();
   if (id === 'suggest') loadSuggestions();
@@ -4071,23 +4080,9 @@ history.replaceState({ page: 'members', index: 0 }, '', '');
 
 window.addEventListener('popstate', (e) => {
   if (e.state && e.state.page) {
-    // 히스토리에서 이전 탭으로
     const targetPage = e.state.page;
     currentPageId = targetPage;
-
-    // UI 업데이트 (showPage 대신 직접)
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-    const pageEl = document.getElementById('page-' + targetPage);
-    if (pageEl) pageEl.classList.add('active');
-    const navBtns = document.querySelectorAll('nav button');
-    navBtns.forEach(b => {
-      if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(`'${targetPage}'`)) {
-        b.classList.add('active');
-      }
-    });
-
-    // 탭별 렌더링
+    _activatePage(targetPage);
     if (targetPage === 'history') renderHistory();
     if (targetPage === 'ranking') renderRanking();
     if (targetPage === 'suggest') loadSuggestions();
@@ -4096,7 +4091,6 @@ window.addEventListener('popstate', (e) => {
     if (targetPage === 'court') { goToday(); loadAllCourtSchedules(); }
     if (targetPage === 'settings') renderSettingsInfo();
   }
-  // e.state가 없으면 브라우저가 자연스럽게 앱 종료
 });
 
 // PWA 설치 배너
