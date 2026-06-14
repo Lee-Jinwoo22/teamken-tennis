@@ -3577,15 +3577,10 @@ async function deleteDateSchedule(date) {
 function showPage(id) {
   currentPageId = id;
   history.pushState({ page: id }, '', '');
-  _activatePage(id);
-}
-
-function _activatePage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
   const pageEl = document.getElementById('page-' + id);
   if (pageEl) pageEl.classList.add('active');
-  // 해당 탭 버튼 활성화
   document.querySelectorAll('nav button').forEach(b => {
     if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(`'${id}'`)) {
       b.classList.add('active');
@@ -3603,21 +3598,28 @@ function _activatePage(id) {
         try {
           currentBracket = JSON.parse(saved);
           renderBracket(currentBracket);
-          document.getElementById('save-btn').style.display = 'inline-block';
-          document.getElementById('add-round-btn').style.display = 'inline-block';
-          document.getElementById('copy-btn').style.display = 'inline-block';
-          document.getElementById('img-btn').style.display = 'inline-block';
-          document.getElementById('pdf-btn').style.display = 'inline-block';
-          document.getElementById('share-btn').style.display = 'inline-block';
+          ['save-btn','add-round-btn','copy-btn','img-btn','pdf-btn','share-btn'].forEach(bid => {
+            const el = document.getElementById(bid);
+            if (el) el.style.display = 'inline-block';
+          });
         } catch(e) { console.warn(e); }
       }
     }
   }
-  if (id === 'court') {
-    goToday();
-    loadAllCourtSchedules();
-  }
+  if (id === 'court') { goToday(); loadAllCourtSchedules(); }
   if (id === 'settings') renderSettingsInfo();
+}
+
+function _activatePage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  const pageEl = document.getElementById('page-' + id);
+  if (pageEl) pageEl.classList.add('active');
+  document.querySelectorAll('nav button').forEach(b => {
+    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(`'${id}'`)) {
+      b.classList.add('active');
+    }
+  });
 }
 
 // ========== 게스트 ==========
