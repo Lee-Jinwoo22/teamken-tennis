@@ -813,7 +813,7 @@
       <button class="btn btn-sm" style="border:1px solid var(--accent);color:#8a6000;background:var(--accent-pale);" onclick="copyBracketText()" id="copy-btn" style="display:none;">📋 카톡 복사</button>
       <button class="btn btn-sm" style="border:1px solid var(--blue);color:var(--blue);background:var(--blue-pale);" onclick="saveBracketImage()" id="img-btn" style="display:none;">🖼️ 이미지 저장</button>
       <button class="btn btn-sm" style="border:1px solid var(--red);color:var(--red);background:#fde8e8;" onclick="showPDFDatePicker()" id="pdf-btn" style="display:none;">📄 PDF 저장</button>
-      <button class="btn btn-sm" style="border:1px solid #9b59b6;color:#9b59b6;background:#f5eef8;" onclick="shareBracket()" id="share-btn" style="display:none;">📡 실시간 공유</button>
+      <button class="btn btn-sm" style="border:1px solid #9b59b6;color:#9b59b6;background:#f5eef8;" onclick="clearLiveBracket()" id="share-btn" style="display:none;">🗑 경기 종료</button>
       <!-- PDF 날짜 선택 팝업 -->
       <div id="pdf-date-picker" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;display:none;align-items:center;justify-content:center;">
         <div style="background:white;border-radius:14px;padding:24px;width:300px;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
@@ -1439,6 +1439,7 @@ function generateBracket() {
   currentBracket = { attendees, bracket, courts, rounds, genderSep, playCounts, date: new Date().toISOString() };
   // 탭 이동해도 유지되도록 sessionStorage에 저장
   sessionStorage.setItem('tkCurrentBracket', JSON.stringify(currentBracket));
+  saveLiveBracket();
   renderBracket(currentBracket);
   document.getElementById('save-btn').style.display = 'inline-block';
   document.getElementById('add-round-btn').style.display = 'inline-block';
@@ -1461,6 +1462,7 @@ function shuffleBracket() {
   currentBracket.bracket = bracket;
   currentBracket.playCounts = playCounts;
   sessionStorage.setItem('tkCurrentBracket', JSON.stringify(currentBracket));
+  saveLiveBracket();
   renderBracket(currentBracket);
 }
 
@@ -1516,6 +1518,7 @@ function renderBracket(data) {
             </select>
           </div>`;
       };
+      const gameResult = game.result || '';
       html += `
         <div class="court-card">
           <div class="court-header">
@@ -1530,6 +1533,30 @@ function renderBracket(data) {
           <div class="team">
             <div class="team-label">팀 B · Avg L${avgB}</div>
             <div class="team-players" style="gap:6px;flex-wrap:wrap;">${game.teamB.map((p,pi)=>makePlayerChip(p,'B',pi)).join('')}</div>
+          </div>
+          <!-- 승무패 -->
+          <div style="display:flex;gap:6px;padding:8px 10px;border-top:1px solid var(--border);background:var(--bg);justify-content:center;">
+            <button onclick="setBracketResult(${ri},${ci},'A')"
+              style="flex:1;padding:6px 4px;border-radius:8px;border:1.5px solid ${gameResult==='A'?'var(--green)':'var(--border)'};
+              background:${gameResult==='A'?'var(--green-pale)':'white'};
+              color:${gameResult==='A'?'var(--green)':'var(--text-muted)'};
+              font-size:12px;font-weight:700;cursor:pointer;">
+              팀A 승
+            </button>
+            <button onclick="setBracketResult(${ri},${ci},'D')"
+              style="flex:1;padding:6px 4px;border-radius:8px;border:1.5px solid ${gameResult==='D'?'var(--accent)':'var(--border)'};
+              background:${gameResult==='D'?'var(--accent-pale)':'white'};
+              color:${gameResult==='D'?'#8a6000':'var(--text-muted)'};
+              font-size:12px;font-weight:700;cursor:pointer;">
+              무승부
+            </button>
+            <button onclick="setBracketResult(${ri},${ci},'B')"
+              style="flex:1;padding:6px 4px;border-radius:8px;border:1.5px solid ${gameResult==='B'?'var(--blue)':'var(--border)'};
+              background:${gameResult==='B'?'var(--blue-pale)':'white'};
+              color:${gameResult==='B'?'var(--blue)':'var(--text-muted)'};
+              font-size:12px;font-weight:700;cursor:pointer;">
+              팀B 승
+            </button>
           </div>
         </div>
       `;
@@ -1921,15 +1948,13 @@ function addRound() {
 
   // sessionStorage 업데이트
   sessionStorage.setItem('tkCurrentBracket', JSON.stringify(currentBracket));
+  saveLiveBracket();
 
   renderBracket(currentBracket);
   showToast(`✅ ${newRoundNum}라운드 추가됐어요!`);
 }
 
-// ========== 실시간 대진표 공유 ==========
-let bracketListener = null;
-
-async function shareBracket() {
+async function saveLiveBracket() {
   if (!currentBracket) return;
   try {
     await db.collection('liveBracket').doc('current').set({
@@ -1937,62 +1962,55 @@ async function shareBracket() {
       sharedAt: new Date().toISOString(),
       isLive: true
     });
-    showToast('📡 대진표가 실시간 공유됐어요!');
-    renderShareStatus(true);
-  } catch(e) {
-    console.warn(e);
-    showToast('공유 실패');
-  }
+  } catch(e) { console.warn('자동 저장 오류:', e); }
 }
 
-async function stopShare() {
+async function clearLiveBracket() {
+  if (!confirm('경기를 종료하고 공유 대진표를 삭제할까요?')) return;
   try {
-    await db.collection('liveBracket').doc('current').update({ isLive: false });
+    await db.collection('liveBracket').doc('current').set({ isLive: false });
     if (bracketListener) { bracketListener(); bracketListener = null; }
-    renderShareStatus(false);
-    showToast('공유가 종료됐어요');
+    currentBracket = null;
+    sessionStorage.removeItem('tkCurrentBracket');
+    document.getElementById('bracket-result').innerHTML = '';
+    document.getElementById('share-status').innerHTML = '';
+    ['save-btn','add-round-btn','copy-btn','img-btn','pdf-btn','share-btn'].forEach(id => {
+      document.getElementById(id).style.display = 'none';
+    });
+    showToast('경기가 종료됐어요');
   } catch(e) { console.warn(e); }
 }
 
+// ========== 실시간 대진표 공유 ==========
+let bracketListener = null;
+
 function renderShareStatus(isLive) {
   const el = document.getElementById('share-status');
-  if (isLive) {
-    el.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#f5eef8;border:1px solid #d7bde2;border-radius:8px;margin-bottom:12px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span style="width:8px;height:8px;background:#9b59b6;border-radius:50%;display:inline-block;animation:pulse 1s infinite;"></span>
-          <span style="font-size:13px;font-weight:600;color:#9b59b6;">실시간 공유 중</span>
-          <span style="font-size:11px;color:#aaa;">— 회원들이 접속하면 이 대진표를 볼 수 있어요</span>
-        </div>
-        <button onclick="stopShare()" style="background:none;border:1px solid #9b59b6;color:#9b59b6;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">공유 종료</button>
-      </div>
-    `;
-  } else {
-    el.innerHTML = '';
-  }
+  if (!el) return;
+  el.innerHTML = isLive ? `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:#f5eef8;border:1px solid #d7bde2;border-radius:8px;margin-bottom:12px;font-size:12px;color:#9b59b6;">
+      <span style="width:8px;height:8px;background:#9b59b6;border-radius:50%;display:inline-block;animation:pulse 1s infinite;"></span>
+      <span style="font-weight:600;">실시간 공유 중</span>
+      <span style="color:#aaa;">— 대진표가 자동 저장됩니다</span>
+    </div>` : '';
 }
 
-// 실시간 리스너 시작 (다른 사람이 접속했을 때 대진표 자동 수신)
+// 실시간 리스너 - 접속하면 자동으로 현재 대진표 수신
 function startBracketListener() {
   if (bracketListener) return;
   bracketListener = db.collection('liveBracket').doc('current')
     .onSnapshot(snap => {
       if (!snap.exists) return;
       const data = snap.data();
-      if (!data.isLive) {
-        renderShareStatus(false);
-        return;
-      }
-      // 내가 공유한 게 아닐 때만 수신 (다른 사람 화면에 표시)
+      if (!data.isLive) { renderShareStatus(false); return; }
       currentBracket = data;
       sessionStorage.setItem('tkCurrentBracket', JSON.stringify(data));
       renderBracket(data);
       renderShareStatus(true);
-      document.getElementById('save-btn').style.display = 'inline-block';
-      document.getElementById('copy-btn').style.display = 'inline-block';
-      document.getElementById('img-btn').style.display = 'inline-block';
-      document.getElementById('pdf-btn').style.display = 'inline-block';
-      document.getElementById('share-btn').style.display = 'inline-block';
+      ['save-btn','add-round-btn','copy-btn','img-btn','pdf-btn','share-btn'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'inline-block';
+      });
     }, e => console.warn('리스너 오류:', e));
 }
 
@@ -2005,7 +2023,7 @@ function saveBracket() {
     attendees: currentBracket.attendees.map(p => p.name),
     courts: currentBracket.courts,
     rounds: currentBracket.rounds,
-    bracket: currentBracket.bracket
+    bracket: currentBracket.bracket  // 결과(result) 포함
   };
   history.unshift(entry);
   saveHistory();
@@ -2117,6 +2135,15 @@ async function deleteHistory(hi) {
   } catch(e) { console.warn('Firebase 삭제 오류:', e); }
   renderHistory();
   renderRanking();
+}
+
+function setBracketResult(ri, ci, result) {
+  if (!currentBracket) return;
+  currentBracket.bracket[ri].games[ci].result = result;
+  sessionStorage.setItem('tkCurrentBracket', JSON.stringify(currentBracket));
+  saveLiveBracket();
+  renderBracket(currentBracket);
+  showToast('결과 저장됨');
 }
 
 function togglePlayerSelect(selectId, chipId) {
