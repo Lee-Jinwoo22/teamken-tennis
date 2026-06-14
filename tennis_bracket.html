@@ -2139,11 +2139,11 @@ async function deleteHistory(hi) {
 
 function setBracketResult(ri, ci, result) {
   if (!currentBracket) return;
-  currentBracket.bracket[ri].games[ci].result = result;
+  const game = currentBracket.bracket[ri].games[ci];
+  // 같은 버튼 누르면 취소
+  game.result = game.result === result ? null : result;
   sessionStorage.setItem('tkCurrentBracket', JSON.stringify(currentBracket));
-  saveLiveBracket();
   renderBracket(currentBracket);
-  showToast('결과 저장됨');
 }
 
 function togglePlayerSelect(selectId, chipId) {
