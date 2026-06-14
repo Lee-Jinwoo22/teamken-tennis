@@ -1,0 +1,28 @@
+{
+  "name": "TeamKen Tennis League",
+  "short_name": "팀켄테니스",
+  "description": "팀켄테니스 클럽 대진표 & 관리 시스템",
+  "start_url": "/teamken-tennis/tennis_bracket.html",
+  "display": "standalone",
+  "background_color": "#1a6b3c",
+  "theme_color": "#1a6b3c",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "sports",
+    "utilities"
+  ]
+}

@@ -2,8 +2,17 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>TeamKen Tennis League</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a6b3c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="팀켄테니스">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Bebas+Neue&display=swap');
 
@@ -676,6 +685,25 @@
     h2 { font-size: 16px; }
     .courts-row { grid-template-columns: 1fr; }
   }
+  /* ===== 모바일 최적화 ===== */
+  @media (max-width: 600px) {
+    header { flex-direction: column; align-items: stretch; }
+    nav { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    nav::-webkit-scrollbar { display: none; }
+    nav button { padding: 12px 14px; font-size: 12px; }
+    .header-logo { font-size: 22px; padding: 14px 18px; }
+    h2 { font-size: 16px; }
+    .courts-row { grid-template-columns: 1fr; }
+    .btn { padding: 12px 18px; font-size: 14px; min-height: 44px; }
+    .btn-sm { padding: 10px 14px; font-size: 13px; min-height: 40px; }
+    input, select, textarea { font-size: 16px !important; min-height: 44px; }
+    .attendance-item { padding: 12px 14px; }
+    .member-card { padding: 12px 14px; }
+    .action-bar { gap: 8px; }
+    .form-row { gap: 8px; flex-direction: column; }
+    .page { padding: 16px 12px; }
+    .stat-num { font-size: 22px; }
+  }
 </style>
 </head>
 <body>
@@ -686,7 +714,7 @@
     <div class="header-title">Tennis League</div>
   </div>
   <nav>
-    <button class="active" onclick="showPage('members')">회원 관리</button>
+    <button onclick="showPage('members')" class="active">회원 관리</button>
     <button onclick="showPage('bracket')">대진표 생성</button>
     <button onclick="showPage('history')">경기 기록</button>
     <button onclick="showPage('ranking')">순위표</button>
@@ -694,6 +722,7 @@
     <button onclick="showPage('suggest')">건의사항</button>
     <button onclick="showPage('finance')">회비/회계</button>
     <button onclick="showPage('settings')">설정 / 백업</button>
+    <button id="install-btn" onclick="installPWA()" style="display:none;background:var(--accent);color:var(--green);font-weight:700;border:none;padding:12px 16px;font-family:inherit;font-size:13px;cursor:pointer;">📲 앱 설치</button>
   </nav>
 </header>
 
@@ -1398,6 +1427,8 @@ function generateBracket() {
   }
 
   currentBracket = { attendees, bracket, courts, rounds, genderSep, playCounts, date: new Date().toISOString() };
+  // 탭 이동해도 유지되도록 sessionStorage에 저장
+  sessionStorage.setItem('tkCurrentBracket', JSON.stringify(currentBracket));
   renderBracket(currentBracket);
   document.getElementById('save-btn').style.display = 'inline-block';
   document.getElementById('copy-btn').style.display = 'inline-block';
@@ -1417,6 +1448,7 @@ function shuffleBracket() {
   }
   currentBracket.bracket = bracket;
   currentBracket.playCounts = playCounts;
+  sessionStorage.setItem('tkCurrentBracket', JSON.stringify(currentBracket));
   renderBracket(currentBracket);
 }
 
@@ -3408,6 +3440,22 @@ function showPage(id) {
   if (id === 'ranking') renderRanking();
   if (id === 'suggest') loadSuggestions();
   if (id === 'finance') loadFinanceData();
+  if (id === 'bracket') {
+    // 이전 대진표 복원
+    if (!currentBracket) {
+      const saved = sessionStorage.getItem('tkCurrentBracket');
+      if (saved) {
+        try {
+          currentBracket = JSON.parse(saved);
+          renderBracket(currentBracket);
+          document.getElementById('save-btn').style.display = 'inline-block';
+          document.getElementById('copy-btn').style.display = 'inline-block';
+          document.getElementById('img-btn').style.display = 'inline-block';
+          document.getElementById('pdf-btn').style.display = 'inline-block';
+        } catch(e) { console.warn(e); }
+      }
+    }
+  }
   if (id === 'court') {
     goToday();
     loadAllCourtSchedules();
@@ -3840,6 +3888,47 @@ document.addEventListener('input', e => {
   if (e.target.id === 'suggest-content') {
     document.getElementById('suggest-charcount').textContent = `${e.target.value.length} / 500자`;
   }
+});
+
+function installPWA() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(result => {
+      if (result.outcome === 'accepted') {
+        showToast('✅ 설치 중...');
+      }
+      deferredPrompt = null;
+    });
+  } else {
+    // iOS 안내
+    showToast('Safari에서 공유 버튼 → 홈 화면에 추가를 눌러주세요');
+  }
+}
+
+// ========== PWA ==========
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('SW 등록됨'))
+      .catch(e => console.warn('SW 실패:', e));
+  });
+}
+
+// PWA 설치 배너
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // 설치 버튼 표시
+  const btn = document.getElementById('install-btn');
+  if (btn) btn.style.display = 'inline-block';
+});
+
+window.addEventListener('appinstalled', () => {
+  showToast('✅ 앱이 홈화면에 설치됐어요!');
+  deferredPrompt = null;
+  const btn = document.getElementById('install-btn');
+  if (btn) btn.style.display = 'none';
 });
 </script>
 </body>
