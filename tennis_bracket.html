@@ -3576,7 +3576,6 @@ async function deleteDateSchedule(date) {
 // ========== NAV ==========
 function showPage(id) {
   currentPageId = id;
-  history.pushState({ page: id }, '', '');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
   const pageEl = document.getElementById('page-' + id);
@@ -4073,27 +4072,7 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// 탭 히스토리 관리
-let pageHistory = ['members'];
 let currentPageId = 'members';
-
-// 초기 상태 설정
-history.replaceState({ page: 'members', index: 0 }, '', '');
-
-window.addEventListener('popstate', (e) => {
-  if (e.state && e.state.page) {
-    const targetPage = e.state.page;
-    currentPageId = targetPage;
-    _activatePage(targetPage);
-    if (targetPage === 'history') renderHistory();
-    if (targetPage === 'ranking') renderRanking();
-    if (targetPage === 'suggest') loadSuggestions();
-    if (targetPage === 'finance') loadFinanceData();
-    if (targetPage === 'bracket') startBracketListener();
-    if (targetPage === 'court') { goToday(); loadAllCourtSchedules(); }
-    if (targetPage === 'settings') renderSettingsInfo();
-  }
-});
 
 // PWA 설치 배너
 let deferredPrompt;
