@@ -2016,18 +2016,28 @@ async function deleteHistory(hi) {
 }
 
 function togglePlayerSelect(selectId, chipId) {
-  // 다른 드롭다운 모두 닫기
+  // 다른 드롭다운 모두 닫기 + z-index 리셋
   document.querySelectorAll('[id^="sel-"]').forEach(el => {
     if (el.id !== selectId) el.style.display = 'none';
   });
+  document.querySelectorAll('.court-card').forEach(el => el.style.zIndex = '');
+
   const sel = document.getElementById(selectId);
-  sel.style.display = sel.style.display === 'none' ? 'block' : 'none';
+  const isOpen = sel.style.display !== 'none';
+  sel.style.display = isOpen ? 'none' : 'block';
+
+  // 열릴 때 해당 코트 카드의 z-index를 최상위로
+  if (!isOpen) {
+    const card = sel.closest('.court-card');
+    if (card) card.style.zIndex = '1000';
+  }
 }
 
 // 외부 클릭 시 드롭다운 닫기
 document.addEventListener('click', e => {
   if (!e.target.closest('[id^="chip-"]') && !e.target.closest('[id^="sel-"]')) {
     document.querySelectorAll('[id^="sel-"]').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.court-card').forEach(el => el.style.zIndex = '');
   }
 });
 
