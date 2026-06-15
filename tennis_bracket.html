@@ -1155,11 +1155,13 @@ async function loadData() {
 }
 
 function levelLabel(level) {
-  return level === '코치' || level === 11 ? '코치' : `L${level}`;
+  if (level === '코치' || level === 11 || String(level) === '코치') return '코치';
+  if (!level && level !== 0) return '?';
+  return `L${level}`;
 }
 
 function levelBadgeStyle(level) {
-  return level === '코치' || level === 11
+  return (level === '코치' || level === 11 || String(level) === '코치')
     ? 'background:var(--accent);color:var(--green);'
     : 'background:var(--green);color:white;';
 }
@@ -1210,7 +1212,8 @@ function showToast(msg, duration=2500) {
 function addMember() {
   const name = document.getElementById('m-name').value.trim();
   const gender = document.getElementById('m-gender').value;
-  const level = parseInt(document.getElementById('m-level').value);
+  const rawLevel = document.getElementById('m-level').value;
+  const level = rawLevel === '코치' ? '코치' : parseInt(rawLevel);
   if (!name) { alert('이름을 입력하세요'); return; }
   if (members.find(m => m.name === name)) { alert('이미 있는 이름입니다'); return; }
   members.push({ id: Date.now(), name, gender, level });
@@ -1300,7 +1303,8 @@ function updateMember(id) {
   }
   m.name = newName;
   m.gender = document.getElementById(`edit-gender-${id}`).value;
-  m.level = parseInt(document.getElementById(`edit-level-${id}`).value);
+  const rawEditLevel = document.getElementById(`edit-level-${id}`).value;
+  m.level = rawEditLevel === '코치' ? '코치' : parseInt(rawEditLevel);
   members.sort((a,b) => a.name.localeCompare(b.name, 'ko'));
   save();
   renderMembers();
@@ -1363,7 +1367,7 @@ function shuffleArr(arr) {
 
 function matchByLevel(players) {
   // 레벨 차이 최소화 페어링
-  const sorted = [...players].sort((a,b) => b.level - a.level);
+  const sorted = [...players].sort((a,b) => (b.level==='코치'?999:b.level) - (a.level==='코치'?999:a.level));
   const pairs = [];
   // 팀A: 짝수 인덱스, 팀B: 홀수 인덱스 (레벨 교차)
   const teamA = [], teamB = [];
