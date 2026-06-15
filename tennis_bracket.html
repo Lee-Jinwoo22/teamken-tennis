@@ -746,16 +746,16 @@
       </select>
       <select id="m-level">
         <option value="코치">코치</option>
-        <option value="10">10</option>
-        <option value="9">9</option>
-        <option value="8">8</option>
-        <option value="7">7</option>
-        <option value="6">6</option>
-        <option value="5">5</option>
-        <option value="4">4</option>
-        <option value="3">3</option>
-        <option value="2">2</option>
-        <option value="1">1</option>
+        <option value="10">레벨 10</option>
+        <option value="9">레벨 9</option>
+        <option value="8">레벨 8</option>
+        <option value="7">레벨 7</option>
+        <option value="6">레벨 6</option>
+        <option value="5">레벨 5</option>
+        <option value="4">레벨 4</option>
+        <option value="3">레벨 3</option>
+        <option value="2">레벨 2</option>
+        <option value="1">레벨 1</option>
       </select>
       <button class="btn btn-primary" onclick="addMember()">추가</button>
     </div>
@@ -788,16 +788,16 @@
         </select>
         <select id="guest-level">
           <option value="코치">코치</option>
-          <option value="10">10</option>
-          <option value="9">9</option>
-          <option value="8">8</option>
-          <option value="7">7</option>
-          <option value="6">6</option>
-          <option value="5">5</option>
-          <option value="4">4</option>
-          <option value="3">3</option>
-          <option value="2">2</option>
-          <option value="1">1</option>
+          <option value="10">레벨 10</option>
+          <option value="9">레벨 9</option>
+          <option value="8">레벨 8</option>
+          <option value="7">레벨 7</option>
+          <option value="6">레벨 6</option>
+          <option value="5">레벨 5</option>
+          <option value="4">레벨 4</option>
+          <option value="3">레벨 3</option>
+          <option value="2">레벨 2</option>
+          <option value="1">레벨 1</option>
         </select>
         <button class="btn btn-sm btn-primary" onclick="addGuest()">추가</button>
       </div>
@@ -1085,16 +1085,16 @@
           </select>
           <select id="manual-guest-level">
             <option value="코치">코치</option>
-            <option value="10">10</option>
-            <option value="9">9</option>
-            <option value="8">8</option>
-            <option value="7">7</option>
-            <option value="6">6</option>
-            <option value="5">5</option>
-            <option value="4">4</option>
-            <option value="3">3</option>
-            <option value="2">2</option>
-            <option value="1">1</option>
+            <option value="10">레벨 10</option>
+            <option value="9">레벨 9</option>
+            <option value="8">레벨 8</option>
+            <option value="7">레벨 7</option>
+            <option value="6">레벨 6</option>
+            <option value="5">레벨 5</option>
+            <option value="4">레벨 4</option>
+            <option value="3">레벨 3</option>
+            <option value="2">레벨 2</option>
+            <option value="1">레벨 1</option>
           </select>
           <button class="btn btn-sm btn-primary" onclick="addManualGuest()">추가</button>
         </div>
@@ -1276,7 +1276,7 @@ function renderMembers() {
         </select>
         <select id="edit-level-${m.id}" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:white;">
           <option value="코치" ${m.level==='코치'?'selected':''}>코치</option>
-          ${[10,9,8,7,6,5,4,3,2,1].map(l=>`<option value="${l}" ${m.level===l?'selected':''}>${l}</option>`).join('')}
+          ${[10,9,8,7,6,5,4,3,2,1].map(l=>`<option value="${l}" ${m.level===l?'selected':''}>레벨 ${l}</option>`).join('')}
         </select>
         <button class="btn btn-primary btn-sm" onclick="updateMember(${m.id})">저장</button>
         <button class="btn btn-sm" style="border:1px solid var(--border);" onclick="toggleEdit(${m.id})">취소</button>
