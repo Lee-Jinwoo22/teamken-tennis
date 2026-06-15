@@ -983,6 +983,17 @@
     <!-- 월별 요약 -->
     <div id="ledger-monthly-summary" class="card" style="margin-bottom:16px;"></div>
 
+    <!-- 월별 상세 조회 -->
+    <div class="card" style="margin-bottom:16px;border-color:var(--accent);">
+      <div class="section-title" style="margin-bottom:10px;">🔍 월별 상세 조회</div>
+      <div class="form-row" style="align-items:center;">
+        <input type="month" id="ledger-filter-month" style="flex:none;width:160px;">
+        <button class="btn btn-accent btn-sm" onclick="renderMonthlyLedger()">조회</button>
+        <button class="btn btn-sm" style="border:1px solid var(--border);" onclick="clearMonthlyFilter()">전체 보기</button>
+      </div>
+      <div id="monthly-ledger-result" style="margin-top:12px;"></div>
+    </div>
+
     <!-- 전체 내역 -->
     <div style="overflow-x:auto;">
       <div id="ledger-table"></div>
@@ -2966,6 +2977,118 @@ function renderLedgerTable() {
       </tbody>
     </table>
   `;
+}
+
+function renderMonthlyLedger() {
+  const month = document.getElementById('ledger-filter-month').value;
+  if (!month) { alert('월을 선택해주세요'); return; }
+
+  const filtered = ledgerData.filter(e => e.date && e.date.startsWith(month));
+  const el = document.getElementById('monthly-ledger-result');
+
+  if (!filtered.length) {
+    el.innerHTML = '<div class="alert alert-warn">해당 월 내역이 없습니다</div>';
+    return;
+  }
+
+  const totalIncome = filtered.filter(e=>e.type==='수입').reduce((s,e)=>s+e.amount,0);
+  const totalExpense = filtered.filter(e=>e.type==='지출').reduce((s,e)=>s+e.amount,0);
+  const balance = totalIncome - totalExpense;
+
+  // 카테고리별 집계
+  const byCat = {};
+  filtered.forEach(e => {
+    const cat = e.category || '기타';
+    if (!byCat[cat]) byCat[cat] = { income: 0, expense: 0 };
+    if (e.type === '수입') byCat[cat].income += e.amount;
+    else byCat[cat].expense += e.amount;
+  });
+
+  const [year, mon] = month.split('-');
+
+  el.innerHTML = `
+    <!-- 요약 카드 -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
+      <div class="stat-box">
+        <div class="stat-num" style="font-size:18px;color:var(--green);">${totalIncome.toLocaleString()}</div>
+        <div class="stat-label">수입(원)</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" style="font-size:18px;color:var(--red);">${totalExpense.toLocaleString()}</div>
+        <div class="stat-label">지출(원)</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" style="font-size:18px;color:${balance>=0?'var(--green)':'var(--red)'};">${balance.toLocaleString()}</div>
+        <div class="stat-label">잔액(원)</div>
+      </div>
+    </div>
+
+    <!-- 카테고리별 요약 -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px;">
+      <div style="background:var(--green);color:white;padding:8px 14px;font-size:13px;font-weight:700;">
+        ${year}년 ${parseInt(mon)}월 카테고리별 요약
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead>
+          <tr style="background:var(--bg);border-bottom:1px solid var(--border);">
+            <th style="padding:7px 12px;text-align:left;">카테고리</th>
+            <th style="padding:7px 10px;text-align:right;color:var(--green);">수입</th>
+            <th style="padding:7px 10px;text-align:right;color:var(--red);">지출</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${Object.entries(byCat).map(([cat, s], i) => `
+            <tr style="border-bottom:1px solid var(--border);background:${i%2===0?'var(--surface)':'var(--bg)'};">
+              <td style="padding:7px 12px;font-weight:500;">${cat}</td>
+              <td style="padding:7px 10px;text-align:right;color:var(--green);">${s.income?s.income.toLocaleString()+' 원':'-'}</td>
+              <td style="padding:7px 10px;text-align:right;color:var(--red);">${s.expense?s.expense.toLocaleString()+' 원':'-'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 상세 내역 -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+      <div style="background:var(--green);color:white;padding:8px 14px;font-size:13px;font-weight:700;">
+        상세 내역 (${filtered.length}건)
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead>
+          <tr style="background:var(--bg);border-bottom:1px solid var(--border);">
+            <th style="padding:7px 10px;text-align:center;">날짜</th>
+            <th style="padding:7px 8px;text-align:center;">구분</th>
+            <th style="padding:7px 8px;text-align:center;">카테고리</th>
+            <th style="padding:7px 10px;text-align:left;">내용</th>
+            <th style="padding:7px 10px;text-align:right;">금액</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filtered.map((e, i) => `
+            <tr style="border-bottom:1px solid var(--border);background:${i%2===0?'var(--surface)':'var(--bg)'};">
+              <td style="padding:6px 10px;text-align:center;color:var(--text-muted);">${e.date}</td>
+              <td style="padding:6px 8px;text-align:center;">
+                <span style="padding:2px 6px;border-radius:6px;font-size:11px;font-weight:700;
+                  background:${e.type==='수입'?'var(--green-pale)':'#fde8e8'};
+                  color:${e.type==='수입'?'var(--green)':'var(--red)'};">${e.type}</span>
+              </td>
+              <td style="padding:6px 8px;text-align:center;font-size:11px;color:var(--text-muted);">${e.category||''}</td>
+              <td style="padding:6px 10px;">${e.detail||''}</td>
+              <td style="padding:6px 10px;text-align:right;font-weight:600;
+                color:${e.type==='수입'?'var(--green)':'var(--red)'};">
+                ${e.type==='수입'?'+':'-'}${e.amount.toLocaleString()}
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function clearMonthlyFilter() {
+  document.getElementById('ledger-filter-month').value = '';
+  document.getElementById('monthly-ledger-result').innerHTML = '';
 }
 
 async function addLedgerEntry() {
