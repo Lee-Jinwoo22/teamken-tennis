@@ -3349,6 +3349,34 @@ async function addComment(eventId, carId) {
   renderCarpoolList();
 }
 
+async function deleteWaypoint(eventId, carId, waypointIndex) {
+  const event = carpoolEvents.find(e => e.id === eventId);
+  const car = event?.cars.find(c => c.id === carId);
+  if (!car || !car.waypoints) return;
+  const removed = car.waypoints.splice(waypointIndex, 1);
+  try {
+    await db.collection('carpoolEvents').doc(eventId).set(event);
+  } catch(e) { console.warn(e); }
+  localStorage.setItem('tkCarpoolEvents', JSON.stringify(carpoolEvents));
+  renderCarpoolList();
+  showToast(`경유지 ${removed[0]?.place} 삭제됐어요`);
+}
+
+async function deleteLegacyWaypoint(eventId, carId) {
+  const event = carpoolEvents.find(e => e.id === eventId);
+  const car = event?.cars.find(c => c.id === carId);
+  if (!car) return;
+  const removed = car.waypoint;
+  car.waypoint = '';
+  car.waypointTime = '';
+  try {
+    await db.collection('carpoolEvents').doc(eventId).set(event);
+  } catch(e) { console.warn(e); }
+  localStorage.setItem('tkCarpoolEvents', JSON.stringify(carpoolEvents));
+  renderCarpoolList();
+  showToast(`경유지 ${removed} 삭제됐어요`);
+}
+
 async function addWaypoint(eventId, carId) {
   const placeEl = document.getElementById(`new-waypoint-${eventId}-${carId}`);
   const timeEl = document.getElementById(`new-waypoint-time-${eventId}-${carId}`);
@@ -3458,11 +3486,19 @@ function renderCarpoolList() {
                           style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.5);color:white;border-radius:5px;padding:2px 7px;font-size:10px;cursor:pointer;">삭제</button>
                       </div>
                     </div>
-                    <div style="font-size:11px;opacity:0.85;margin-top:3px;">
-                      ${car.from ? `📍 ${car.from}` : ''}
-                      ${car.departTime ? ` ⏰ ${car.departTime} 출발` : ''}
-                      ${(car.waypoints||[]).map(w => ` → 🚏 ${w.place}${w.time ? ` (${w.time} 도착 예정)` : ''}`).join('')}
-                      ${car.waypoint ? ` → 🚏 ${car.waypoint}${car.waypointTime ? ` (${car.waypointTime} 도착 예정)` : ''}` : ''}
+                    <div style="font-size:11px;opacity:0.85;margin-top:3px;display:flex;flex-wrap:wrap;align-items:center;gap:4px;">
+                      ${car.from ? `<span>📍 ${car.from}</span>` : ''}
+                      ${car.departTime ? `<span> ⏰ ${car.departTime} 출발</span>` : ''}
+                      ${(car.waypoints||[]).map((w,wi) => `
+                        <span>→ 🚏 ${w.place}${w.time ? ` (${w.time})` : ''}
+                          <button onclick="deleteWaypoint('${event.id}','${car.id}',${wi})"
+                            style="background:rgba(255,255,255,0.25);border:none;color:white;cursor:pointer;font-size:10px;padding:0 3px;border-radius:3px;margin-left:2px;">✕</button>
+                        </span>
+                      `).join('')}
+                      ${car.waypoint ? `<span>→ 🚏 ${car.waypoint}${car.waypointTime ? ` (${car.waypointTime})` : ''}
+                        <button onclick="deleteLegacyWaypoint('${event.id}','${car.id}')"
+                          style="background:rgba(255,255,255,0.25);border:none;color:white;cursor:pointer;font-size:10px;padding:0 3px;border-radius:3px;margin-left:2px;">✕</button>
+                      </span>` : ''}
                     </div>
                   </div>
                   <!-- 경유지 추가 -->
