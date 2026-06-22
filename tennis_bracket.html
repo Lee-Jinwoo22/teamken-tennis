@@ -727,6 +727,7 @@
     <button onclick="showPage('ranking')">순위표</button>
     <button onclick="showPage('court')">코트 예약</button>
     <button onclick="showPage('suggest')">건의사항</button>
+    <button onclick="showPage('carpool')">카풀</button>
     <button onclick="showPage('finance')">회비/회계</button>
     <button onclick="showPage('settings')">설정 / 백업</button>
     <button id="install-btn" onclick="installPWA()" style="display:none;background:var(--accent);color:var(--green);font-weight:700;border:none;padding:12px 16px;font-family:inherit;font-size:13px;cursor:pointer;">📲 앱 설치</button>
@@ -879,6 +880,27 @@
 
   <!-- 날짜별 시간표 누적 표시 -->
   <div id="court-schedules-wrap"></div>
+</div>
+
+<!-- ===== 카풀 ===== -->
+<div id="page-carpool" class="page">
+  <h2>카풀</h2>
+
+  <!-- 이벤트 생성 -->
+  <div class="card">
+    <div class="section-title">🚗 카풀 이벤트 만들기</div>
+    <div class="form-row">
+      <input type="date" id="carpool-date" style="flex:none;width:160px;">
+      <input type="text" id="carpool-place" placeholder="장소 (예: 송산 테니스장)" style="flex:2;">
+    </div>
+    <div class="form-row">
+      <input type="text" id="carpool-memo" placeholder="메모 (선택)">
+      <button class="btn btn-primary" onclick="createCarpoolEvent()">이벤트 생성</button>
+    </div>
+  </div>
+
+  <!-- 이벤트 목록 -->
+  <div id="carpool-list"></div>
 </div>
 
 <!-- ===== 건의사항 ===== -->
@@ -3181,6 +3203,295 @@ async function deleteLedgerEntry(i) {
   await loadFinanceData();
 }
 
+// ========== 카풀 ==========
+let carpoolEvents = [];
+let carpoolListener = null;
+
+async function loadCarpoolEvents() {
+  try {
+    const snap = await db.collection('carpoolEvents').orderBy('date').get();
+    carpoolEvents = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch(e) {
+    carpoolEvents = JSON.parse(localStorage.getItem('tkCarpoolEvents') || '[]');
+  }
+  renderCarpoolList();
+}
+
+async function createCarpoolEvent() {
+  const date = document.getElementById('carpool-date').value;
+  const place = document.getElementById('carpool-place').value.trim();
+  const memo = document.getElementById('carpool-memo').value.trim();
+
+  if (!date || !place) { alert('날짜와 장소를 입력해주세요'); return; }
+
+  const event = {
+    id: String(Date.now()),
+    date, place, memo,
+    cars: [],
+    createdAt: new Date().toISOString()
+  };
+
+  try {
+    await db.collection('carpoolEvents').doc(event.id).set(event);
+  } catch(e) { console.warn(e); }
+
+  carpoolEvents.push(event);
+  carpoolEvents.sort((a,b) => a.date.localeCompare(b.date));
+  localStorage.setItem('tkCarpoolEvents', JSON.stringify(carpoolEvents));
+
+  document.getElementById('carpool-date').value = '';
+  document.getElementById('carpool-place').value = '';
+  document.getElementById('carpool-memo').value = '';
+  renderCarpoolList();
+  showToast('카풀 이벤트가 생성됐어요!');
+}
+
+async function addCar(eventId) {
+  const driverEl = document.getElementById(`car-driver-${eventId}`);
+  const phoneEl = document.getElementById(`car-phone-${eventId}`);
+  const seatsEl = document.getElementById(`car-seats-${eventId}`);
+  const fromEl = document.getElementById(`car-from-${eventId}`);
+
+  const driver = driverEl.value.trim();
+  const phone = phoneEl.value.trim();
+  const seats = parseInt(seatsEl.value) || 3;
+  const from = fromEl.value.trim();
+  const carNum = document.getElementById(`car-num-${eventId}`)?.value.trim() || '';
+  const waypoint = document.getElementById(`car-waypoint-${eventId}`)?.value.trim() || '';
+  const waypointTime = document.getElementById(`car-waypoint-time-${eventId}`)?.value || '';
+  const departTime = document.getElementById(`car-time-${eventId}`)?.value || '';
+
+  if (!driver) { alert('운전자 이름을 입력해주세요'); return; }
+
+  const event = carpoolEvents.find(e => e.id === eventId);
+  if (!event) return;
+
+  const car = { id: String(Date.now()), driver, phone, carNum, seats, from, departTime, waypoint, waypointTime, passengers: [], comments: [] };
+  event.cars.push(car);
+
+  try {
+    await db.collection('carpoolEvents').doc(eventId).set(event);
+  } catch(e) { console.warn(e); }
+
+  localStorage.setItem('tkCarpoolEvents', JSON.stringify(carpoolEvents));
+  driverEl.value = '';
+  phoneEl.value = '';
+  fromEl.value = '';
+  if (document.getElementById(`car-num-${eventId}`)) document.getElementById(`car-num-${eventId}`).value = '';
+  if (document.getElementById(`car-waypoint-${eventId}`)) document.getElementById(`car-waypoint-${eventId}`).value = '';
+  renderCarpoolList();
+  showToast(`${driver}님 차량이 등록됐어요!`);
+}
+
+async function joinCar(eventId, carId) {
+  const nameEl = document.getElementById(`join-name-${eventId}-${carId}`);
+  const name = nameEl.value.trim();
+  if (!name) { alert('이름을 입력해주세요'); return; }
+
+  const event = carpoolEvents.find(e => e.id === eventId);
+  const car = event?.cars.find(c => c.id === carId);
+  if (!car) return;
+
+  if (car.passengers.includes(name)) { alert('이미 신청하셨어요'); return; }
+  if (car.passengers.length >= car.seats) { alert('자리가 꽉 찼어요'); return; }
+
+  car.passengers.push(name);
+
+  try {
+    await db.collection('carpoolEvents').doc(eventId).set(event);
+  } catch(e) { console.warn(e); }
+
+  localStorage.setItem('tkCarpoolEvents', JSON.stringify(carpoolEvents));
+  nameEl.value = '';
+  renderCarpoolList();
+  showToast(`${name}님 탑승 신청 완료!`);
+}
+
+async function leaveCarpool(eventId, carId, name) {
+  const event = carpoolEvents.find(e => e.id === eventId);
+  const car = event?.cars.find(c => c.id === carId);
+  if (!car) return;
+
+  car.passengers = car.passengers.filter(p => p !== name);
+
+  try {
+    await db.collection('carpoolEvents').doc(eventId).set(event);
+  } catch(e) { console.warn(e); }
+
+  localStorage.setItem('tkCarpoolEvents', JSON.stringify(carpoolEvents));
+  renderCarpoolList();
+  showToast('신청이 취소됐어요');
+}
+
+async function addComment(eventId, carId) {
+  const nameEl = document.getElementById(`comment-name-${eventId}-${carId}`);
+  const textEl = document.getElementById(`comment-text-${eventId}-${carId}`);
+  const name = nameEl.value.trim();
+  const text = textEl.value.trim();
+  if (!name) { alert('이름을 입력해주세요'); return; }
+  if (!text) { alert('메시지를 입력해주세요'); return; }
+
+  const event = carpoolEvents.find(e => e.id === eventId);
+  const car = event?.cars.find(c => c.id === carId);
+  if (!car) return;
+
+  if (!car.comments) car.comments = [];
+  const d = new Date();
+  const time = `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  car.comments.push({ name, text, time });
+
+  try {
+    await db.collection('carpoolEvents').doc(eventId).set(event);
+  } catch(e) { console.warn(e); }
+
+  localStorage.setItem('tkCarpoolEvents', JSON.stringify(carpoolEvents));
+  textEl.value = '';
+  renderCarpoolList();
+}
+
+async function deleteCarpoolEvent(eventId) {
+  if (!confirm('이 카풀 이벤트를 삭제할까요?')) return;
+  carpoolEvents = carpoolEvents.filter(e => e.id !== eventId);
+  try {
+    await db.collection('carpoolEvents').doc(eventId).delete();
+  } catch(e) { console.warn(e); }
+  localStorage.setItem('tkCarpoolEvents', JSON.stringify(carpoolEvents));
+  renderCarpoolList();
+  showToast('삭제됐어요');
+}
+
+function renderCarpoolList() {
+  const el = document.getElementById('carpool-list');
+  if (!el) return;
+
+  if (!carpoolEvents.length) {
+    el.innerHTML = '<div class="no-data">카풀 이벤트가 없어요<br><small>위에서 이벤트를 만들어보세요!</small></div>';
+    return;
+  }
+
+  el.innerHTML = carpoolEvents.map(event => {
+    const d = new Date(event.date);
+    const dateLabel = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} (${['일','월','화','수','목','금','토'][d.getDay()]})`;
+    const totalSeats = event.cars.reduce((s,c) => s + c.seats, 0);
+    const totalPassengers = event.cars.reduce((s,c) => s + c.passengers.length, 0);
+    const totalWithDrivers = event.cars.length; // 운전자 수
+
+    return `
+      <div class="card" style="margin-bottom:16px;">
+        <!-- 이벤트 헤더 -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-size:15px;font-weight:700;color:var(--green);">📅 ${dateLabel}</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:2px;">
+              📍 ${event.place}
+              ${event.memo ? `&nbsp;·&nbsp; ${event.memo}` : ''}
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:12px;color:var(--text-muted);">탑승 ${totalPassengers + totalWithDrivers}명 / 총 ${totalSeats + totalWithDrivers}명 (운전자 포함)</span>
+            <button onclick="deleteCarpoolEvent('${event.id}')" style="background:none;border:1px solid var(--red);color:var(--red);border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer;">삭제</button>
+          </div>
+        </div>
+
+        <!-- 차량 목록 -->
+        ${event.cars.length ? `
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+            ${event.cars.map(car => {
+              const available = car.seats - car.passengers.length;
+              return `
+                <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+                  <!-- 차량 헤더 -->
+                  <div style="background:${available>0?'var(--green)':'#888'};color:white;padding:8px 14px;border-radius:8px 8px 0 0;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;">
+                      <div>
+                        <span style="font-weight:700;">🚗 ${car.driver}님 차량</span>
+                        ${car.carNum ? `<span style="font-size:11px;opacity:0.85;margin-left:6px;">${car.carNum}</span>` : ''}
+                        ${car.phone ? `<span style="font-size:11px;opacity:0.85;margin-left:6px;">📞 ${car.phone}</span>` : ''}
+                      </div>
+                      <span style="font-size:11px;">${available > 0 ? `${available}자리 남음` : '만석'}</span>
+                    </div>
+                    <div style="font-size:11px;opacity:0.85;margin-top:3px;">
+                      ${car.from ? `📍 ${car.from}` : ''}
+                      ${car.departTime ? ` ⏰ ${car.departTime} 출발` : ''}
+                      ${car.waypoint ? ` → 🚏 ${car.waypoint}${car.waypointTime ? ` (${car.waypointTime} 도착 예정)` : ''}` : ''}
+                    </div>
+                  </div>
+                  <!-- 탑승자 -->
+                  <div style="padding:10px 14px;background:var(--bg);">
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+                      ${car.passengers.length ? car.passengers.map(p => `
+                        <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:var(--green-pale);border:1px solid var(--green-mid);border-radius:12px;font-size:12px;">
+                          ${p}
+                          <button onclick="leaveCarpool('${event.id}','${car.id}','${p}')"
+                            style="background:none;border:none;color:var(--red);cursor:pointer;font-size:11px;padding:0;">✕</button>
+                        </span>
+                      `).join('') : '<span style="font-size:12px;color:var(--text-muted);">탑승자 없음</span>'}
+                    </div>
+                    ${available > 0 ? `
+                      <div style="display:flex;gap:6px;">
+                        <input type="text" id="join-name-${event.id}-${car.id}" placeholder="이름 입력"
+                          style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;"
+                          onkeydown="if(event.key==='Enter')joinCar('${event.id}','${car.id}')">
+                        <button class="btn btn-sm btn-primary" onclick="joinCar('${event.id}','${car.id}')">탑승 신청</button>
+                      </div>
+                    ` : '<div style="font-size:12px;color:#888;text-align:center;">만석입니다</div>'}
+                  </div>
+                  <!-- 댓글 -->
+                  <div style="padding:10px 14px;border-top:1px solid var(--border);background:white;">
+                    <div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px;">💬 대화</div>
+                    <div style="max-height:150px;overflow-y:auto;margin-bottom:8px;">
+                      ${(car.comments||[]).length ? (car.comments||[]).map(c => `
+                        <div style="margin-bottom:6px;font-size:12px;">
+                          <span style="font-weight:700;color:var(--green);">${c.name}</span>
+                          <span style="color:var(--text-muted);font-size:10px;margin-left:4px;">${c.time}</span>
+                          <div style="color:var(--text);margin-top:2px;padding-left:4px;">${c.text}</div>
+                        </div>
+                      `).join('') : '<div style="font-size:11px;color:var(--text-muted);">아직 대화가 없어요</div>'}
+                    </div>
+                    <div style="display:flex;gap:6px;">
+                      <input type="text" id="comment-name-${event.id}-${car.id}" placeholder="이름"
+                        style="width:70px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
+                      <input type="text" id="comment-text-${event.id}-${car.id}" placeholder="메시지 (예: 경유지 문의)"
+                        style="flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;"
+                        onkeydown="if(event.key==='Enter')addComment('${event.id}','${car.id}')">
+                      <button class="btn btn-sm btn-primary" onclick="addComment('${event.id}','${car.id}')">전송</button>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        ` : '<div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">등록된 차량이 없어요</div>'}
+
+        <!-- 차량 추가 폼 -->
+        <div style="border-top:1px dashed var(--border);padding-top:12px;">
+          <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;">🚗 차량 등록</div>
+          <div class="form-row">
+            <input type="text" id="car-driver-${event.id}" placeholder="운전자 이름" style="flex:1;">
+            <input type="tel" id="car-phone-${event.id}" placeholder="연락처 (선택)" style="flex:1;">
+            <input type="text" id="car-num-${event.id}" placeholder="차량번호 (선택)" style="flex:1;">
+          </div>
+          <div class="form-row">
+            <input type="text" id="car-from-${event.id}" placeholder="출발지" style="flex:1;">
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-muted);white-space:nowrap;">
+              출발<input type="time" id="car-time-${event.id}" value="08:00" style="padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:100px;">
+            </label>
+          </div>
+          <div class="form-row">
+            <input type="text" id="car-waypoint-${event.id}" placeholder="경유지 (선택)" style="flex:2;">
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-muted);white-space:nowrap;">
+              경유 도착<input type="time" id="car-waypoint-time-${event.id}" style="padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:100px;">
+            </label>
+            <input type="number" id="car-seats-${event.id}" value="3" min="1" max="8" style="width:60px;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;" title="운전자 제외 탑승 가능 인원">
+            <span style="font-size:11px;color:var(--text-muted);white-space:nowrap;">명</span>
+            <button class="btn btn-sm btn-primary" onclick="addCar('${event.id}')">차량 등록</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
 // ========== 건의사항 ==========
 let suggestions = [];
 
@@ -3730,6 +4041,7 @@ function showPage(id) {
   if (id === 'history') renderHistory();
   if (id === 'ranking') renderRanking();
   if (id === 'suggest') loadSuggestions();
+  if (id === 'carpool') loadCarpoolEvents();
   if (id === 'finance') loadFinanceData();
   if (id === 'bracket') {
     startBracketListener();
