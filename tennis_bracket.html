@@ -3349,6 +3349,37 @@ async function addComment(eventId, carId) {
   renderCarpoolList();
 }
 
+async function addWaypoint(eventId, carId) {
+  const placeEl = document.getElementById(`new-waypoint-${eventId}-${carId}`);
+  const timeEl = document.getElementById(`new-waypoint-time-${eventId}-${carId}`);
+  const place = placeEl.value.trim();
+  const time = timeEl.value;
+  if (!place) { alert('경유지를 입력해주세요'); return; }
+
+  const event = carpoolEvents.find(e => e.id === eventId);
+  const car = event?.cars.find(c => c.id === carId);
+  if (!car) return;
+
+  if (!car.waypoints) car.waypoints = [];
+  // 기존 단일 경유지가 있으면 waypoints 배열로 이전
+  if (car.waypoint) {
+    car.waypoints.unshift({ place: car.waypoint, time: car.waypointTime || '' });
+    car.waypoint = '';
+    car.waypointTime = '';
+  }
+  car.waypoints.push({ place, time });
+
+  try {
+    await db.collection('carpoolEvents').doc(eventId).set(event);
+  } catch(e) { console.warn(e); }
+
+  localStorage.setItem('tkCarpoolEvents', JSON.stringify(carpoolEvents));
+  placeEl.value = '';
+  timeEl.value = '';
+  renderCarpoolList();
+  showToast(`경유지 ${place} 추가됐어요!`);
+}
+
 async function deleteCar(eventId, carId) {
   if (!confirm('이 차량을 삭제할까요?')) return;
   const event = carpoolEvents.find(e => e.id === eventId);
@@ -3430,7 +3461,20 @@ function renderCarpoolList() {
                     <div style="font-size:11px;opacity:0.85;margin-top:3px;">
                       ${car.from ? `📍 ${car.from}` : ''}
                       ${car.departTime ? ` ⏰ ${car.departTime} 출발` : ''}
+                      ${(car.waypoints||[]).map(w => ` → 🚏 ${w.place}${w.time ? ` (${w.time} 도착 예정)` : ''}`).join('')}
                       ${car.waypoint ? ` → 🚏 ${car.waypoint}${car.waypointTime ? ` (${car.waypointTime} 도착 예정)` : ''}` : ''}
+                    </div>
+                  </div>
+                  <!-- 경유지 추가 -->
+                  <div style="padding:6px 14px;background:#f0f7f0;border-bottom:1px solid var(--border);">
+                    <div style="display:flex;gap:6px;align-items:center;">
+                      <input type="text" id="new-waypoint-${event.id}-${car.id}" placeholder="경유지 추가"
+                        style="flex:2;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
+                      <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-muted);white-space:nowrap;">
+                        도착<input type="time" id="new-waypoint-time-${event.id}-${car.id}"
+                          style="padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:11px;width:90px;">
+                      </label>
+                      <button class="btn btn-sm btn-primary" onclick="addWaypoint('${event.id}','${car.id}')">+ 경유지</button>
                     </div>
                   </div>
                   <!-- 탑승자 -->
