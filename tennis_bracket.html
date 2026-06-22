@@ -3349,6 +3349,19 @@ async function addComment(eventId, carId) {
   renderCarpoolList();
 }
 
+async function deleteCar(eventId, carId) {
+  if (!confirm('이 차량을 삭제할까요?')) return;
+  const event = carpoolEvents.find(e => e.id === eventId);
+  if (!event) return;
+  event.cars = event.cars.filter(c => c.id !== carId);
+  try {
+    await db.collection('carpoolEvents').doc(eventId).set(event);
+  } catch(e) { console.warn(e); }
+  localStorage.setItem('tkCarpoolEvents', JSON.stringify(carpoolEvents));
+  renderCarpoolList();
+  showToast('차량이 삭제됐어요');
+}
+
 async function deleteCarpoolEvent(eventId) {
   if (!confirm('이 카풀 이벤트를 삭제할까요?')) return;
   carpoolEvents = carpoolEvents.filter(e => e.id !== eventId);
@@ -3408,7 +3421,11 @@ function renderCarpoolList() {
                         ${car.carNum ? `<span style="font-size:11px;opacity:0.85;margin-left:6px;">${car.carNum}</span>` : ''}
                         ${car.phone ? `<span style="font-size:11px;opacity:0.85;margin-left:6px;">📞 ${car.phone}</span>` : ''}
                       </div>
-                      <span style="font-size:11px;">${available > 0 ? `${available}자리 남음` : '만석'}</span>
+                      <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:11px;">${available > 0 ? `${available}자리 남음` : '만석'}</span>
+                        <button onclick="deleteCar('${event.id}','${car.id}')"
+                          style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.5);color:white;border-radius:5px;padding:2px 7px;font-size:10px;cursor:pointer;">삭제</button>
+                      </div>
                     </div>
                     <div style="font-size:11px;opacity:0.85;margin-top:3px;">
                       ${car.from ? `📍 ${car.from}` : ''}
